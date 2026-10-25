@@ -19,7 +19,9 @@ export function qualityWindows(samples,duration,window=6){
 }
 export function qualityPlan(assets,analyses,options={}){
  if(assets.length!==analyses.length||!assets.length)throw Error('素材与画面检查不匹配');
- const windows=analyses.flatMap((samples,asset)=>qualityWindows(samples,assets[asset].duration).map(w=>({...w,asset}))).sort((a,b)=>b.score-a.score||a.asset-b.asset||a.start-b.start).slice(0,100);
+ const queues=analyses.map((samples,asset)=>qualityWindows(samples,assets[asset].duration).map(w=>({...w,asset}))),windows=[];
+ // Cover each source before adding further windows from a high-scoring source.
+ let capacity=0;for(let round=0;windows.length<100;round++){let added=false;for(const q of queues){if(q[round]){windows.push(q[round]);capacity+=q[round].end-q[round].start;added=true;if(windows.length>=100)break}}if(!added||capacity>=(options.target||15))break;}
  const result=creativePlan(windows.map(w=>({duration:w.end-w.start})),{...options,deferRemix:true});
  const choices=result.clips.map(c=>{const w=windows[c.asset];return {asset:w.asset,start:c.start+w.start,end:c.end+w.start,caption:c.caption,effect:c.effect,quality:{score:w.score,sampleTime:w.sampleTime,flags:w.flags}}});
  const edited=storyboardCopy(options.style==='reference'?choices:remixClips(choices,assets,{mode:options.mode||'remix'}),result.copy.split('\n'));

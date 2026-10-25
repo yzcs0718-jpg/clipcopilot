@@ -11,3 +11,9 @@ export function composeImport(current,pending,mode='replace'){
 export function appendBasicClips(plan,assets,startIndex,seconds=5){
  if(!Number.isFinite(seconds)||seconds<1||seconds>60)throw Error('每段时长需为 1–60 秒');const additions=assets.slice(startIndex).map((a,i)=>({asset:startIndex+i,start:0,end:Math.min(seconds,a.duration),caption:'',effect:'none'}));if(plan.clips.length+additions.length>100)throw Error('素材已导入，但时间线超过 100 段；请减少片段后生成');return {...structuredClone(plan),clips:[...structuredClone(plan.clips),...additions]};
 }
+
+export function importAction({mode='replace',auto=true,rebuildAppend=false,hasClips=false}={}){
+ if(!['replace','append'].includes(mode))throw Error('请选择有效的导入方式');
+ if(mode==='append'&&hasClips&&!rebuildAppend)return 'append';
+ return auto||rebuildAppend&&mode==='append'?'rebuild':'append';
+}
