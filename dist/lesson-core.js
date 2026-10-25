@@ -6,14 +6,15 @@ export const lessons={
  '快慢变速':{steps:['定位动作：先找到动作开始、高潮与结束的位置；抽帧不能确定原片速度。','绘制速度曲线：选中片段 → 变速 → 曲线变速或自定义，添加速度变化点。','回放调整：试做 1× → 2× → 0.7× → 1×，核对动作和音乐节拍；低帧率减速可能卡顿。'],parameter:'曲线示意：1× → 2× → 0.7× → 1×',check:'静帧不能证明使用了变速；本视频展示曲线示意，未重建原始运动。'},
  '画中画 / 细节叠加':{steps:['准备轨道：主画面放主轨，把细节素材放上方叠加轨；手机端通常叫画中画。','调整窗口：设置缩放与位置，按需要加矩形蒙版，给主体和字幕留出空间。','对齐信息：让细节窗口跟随对应讲解出现，核对遮挡和画面边缘。'],parameter:'试做：主画面 + 右下角细节窗口',check:'示意复用同一参考帧；实际工程应换成你的细节素材。'}
 };
+export function lessonCheck(shot){return shot.evidence?.startsWith('来自当前工程参数')?'参数来自这条成片的工作台工程；请按源区间定位并核对主体裁切。':(lessons[shot.effect]||lessons['硬切 / 节奏切换']).check}
 export function lessonSteps(shot){
  const recipe=lessons[shot.effect]||lessons['硬切 / 节奏切换'];if(shot.effect==='叠化 / 淡入淡出'&&shot.evidence?.includes('单镜头透明度')){const fade=Math.min(.3,(shot.end-shot.start)/2);return [`定位成片 ${shot.start.toFixed(2)}–${shot.end.toFixed(2)} 秒对应片段，打开不透明度；在镜头起点设置 0%。`,`在镜头起点后 ${fade.toFixed(2)} 秒设置 100%；在终点前 ${fade.toFixed(2)} 秒保持 100%，在镜头终点设置 0%。`,`回放核对：这是单镜头透明度变化；本工作台的该效果没有使用两段素材的叠化转场。`]}const range=`${shot.start.toFixed(2)}–${shot.end.toFixed(2)} 秒`;
- return recipe.steps.map((text,i)=>i===0?`对应参考时间 ${range}：${text}`:i===1&&shot.effect==='缓慢推近'?`在该镜头起点设置 100%，终点设置约 108%；${text}`:text);
+ return recipe.steps.map((text,i)=>i===0?`对应参考时间 ${range}：${text}`:i===1&&shot.effect==='缓慢推近'?'在该镜头起点添加缩放 100% 关键帧；移动到镜头终点设置约 108%，核对位置使主体保持居中。':text);
 }
 export function buildLesson(shots,samples,selected='all'){
  const chosen=selected==='all'?shots.map((s,i)=>({...s,index:i})):shots[Number(selected)]?[{...shots[Number(selected)],index:Number(selected)}]:[];
  if(!chosen.length||chosen.length>100||!samples.length)throw Error('请先完成拉片抽帧，并选择有效镜头');
- let cursor=0;return chosen.flatMap(s=>{const recipe=lessons[s.effect]||lessons['硬切 / 节奏切换'];const pic=samples.reduce((a,b)=>Math.abs(b.time-(s.start+s.end)/2)<Math.abs(a.time-(s.start+s.end)/2)?b:a);return lessonSteps(s).map((text,step)=>{const duration=Math.min(12,Math.max(4,Math.ceil(text.replace(/\s/g,'').length/7))),start=cursor;cursor+=duration;return {shot:s.index+1,range:`${s.start.toFixed(2)}–${s.end.toFixed(2)} 秒`,effect:Object.hasOwn(lessons,s.effect)?s.effect:'硬切 / 节奏切换',text,step,parameter:recipe.parameter,check:recipe.check,image:pic.image,start,duration}})});
+ let cursor=0;return chosen.flatMap(s=>{const recipe=lessons[s.effect]||lessons['硬切 / 节奏切换'];const pic=samples.reduce((a,b)=>Math.abs(b.time-(s.start+s.end)/2)<Math.abs(a.time-(s.start+s.end)/2)?b:a);return lessonSteps(s).map((text,step)=>{const duration=Math.min(12,Math.max(4,Math.ceil(text.replace(/\s/g,'').length/7))),start=cursor;cursor+=duration;return {shot:s.index+1,range:`${s.start.toFixed(2)}–${s.end.toFixed(2)} 秒`,effect:Object.hasOwn(lessons,s.effect)?s.effect:'硬切 / 节奏切换',text,step,parameter:recipe.parameter,check:lessonCheck(s),image:pic.image,start,duration}})});
 }
 // Only low-resolution brightness evidence; never identifies original project effects.
 export function effectHint(samples,shot){

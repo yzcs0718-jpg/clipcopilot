@@ -1,0 +1,4 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {claimMediaTask,mediaTaskLabel} from '../dist/media-task.js';import {lessonCheck} from '../dist/lesson-core.js';
+test('教学生成期间不能启动导入或其它媒体任务，失败的竞争不会释放原锁',()=>{const release=claimMediaTask('生成教学视频');try{assert.throws(()=>claimMediaTask('读取视频素材'),/正在生成教学视频/);assert.equal(mediaTaskLabel(),'生成教学视频')}finally{release()}assert.equal(mediaTaskLabel(),'')});
+test('过期释放函数不能清除后续任务的锁，释放可重复执行',()=>{const first=claimMediaTask('第一次');first();const second=claimMediaTask('第二次');try{first();assert.equal(mediaTaskLabel(),'第二次')}finally{second();second()}assert.equal(mediaTaskLabel(),'')});
+test('自己的工程参数与外部效果推测使用不同核对说明',()=>{assert.doesNotMatch(lessonCheck({effect:'缓慢推近',evidence:'来自当前工程参数：缩放 100%→108%。'}),/可能是实拍/);assert.match(lessonCheck({effect:'缓慢推近',evidence:'仅有采样帧'}),/可能是实拍/)});
