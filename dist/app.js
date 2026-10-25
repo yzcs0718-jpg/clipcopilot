@@ -1,4 +1,4 @@
-import {getActiveSkill,setActiveSkill} from './github-skills-state.js';
+import {getPresetSkill,setActiveSkill} from './github-skills-state.js';
 import {applyRecipeCaptions,validateProvenance,validateSkill} from './github-skills-core.js';
 import {qualityPlan} from './quality-core.js';
 import {scanQuality} from './quality-scan.js';
@@ -71,7 +71,7 @@ window.addEventListener('hashchange',stopTimelinePreview);
 
 $('preview').addEventListener('timeupdate',()=>{if(!previewVisual)return;const v=$('preview'),c=previewVisual,state=visualEffect(c.effect,Math.max(0,v.currentTime-c.start),c.end-c.start);v.style.transform=`scale(${state.scale})`;v.style.opacity=state.alpha});
 async function buildCreative(){
- let states;try{if(busy)throw Error('请等待当前导出或导入完成');if(!assets.length)throw Error('请先导入素材');stopTimelinePreview();const skill=getActiveSkill();const options={style:$('creative-style').value,topic:$('creative-topic').value,kind:$('creative-kind').value,target:Number($('creative-seconds').value),referenceStyle};if(!Number.isFinite(options.target)||options.target<3||options.target>60)throw Error('目标时长需为 3–60 秒');let result;
+ let states;try{if(busy)throw Error('请等待当前导出或导入完成');if(!assets.length)throw Error('请先导入素材');stopTimelinePreview();const skill=getPresetSkill();const options={style:$('creative-style').value,topic:$('creative-topic').value,kind:$('creative-kind').value,target:Number($('creative-seconds').value),referenceStyle};if(!Number.isFinite(options.target)||options.target<3||options.target>60)throw Error('目标时长需为 3–60 秒');let result;
  if($('creative-quality').checked){busy=true;states=new Map([...document.querySelectorAll('button,input,select,textarea')].map(e=>[e,e.disabled]));states.forEach((_,e)=>e.disabled=true);$('quality-cancel').hidden=false;$('quality-cancel').disabled=false;qualityAbort=new AbortController();let analyses=assets.map(a=>qualityCache.get(a.url));if(analyses.some(a=>!a)){analyses=await scanQuality(assets,{signal:qualityAbort.signal,onProgress:(n,total,i)=>{$('creative-status').textContent=`正在本地检查画面 ${n}/${total}：${assets[i].name}。不上传素材，不调用模型。`}});analyses.forEach((a,i)=>qualityCache.set(assets[i].url,a))}result=qualityPlan(assets,analyses,options);
  }else result=creativePlan(assets,options);
  result=applyRecipeCaptions(result,skill);checkpoint();plan={clips:result.clips,referenceStyle:result.referenceStyle,skill:result.skill};$('creative-source').textContent=attribution(result.referenceStyle);$('script-text').value=result.copy;$('coach-goal').value=$('creative-kind').value;draw();document.querySelector('.timeline-panel').open=true;$('quality-results').replaceChildren();if(result.quality){for(const q of result.quality){const row=document.createElement('p');row.textContent=`${assets[q.asset].name} · ${q.start.toFixed(2)}–${q.end.toFixed(2)} 秒｜画面评分 ${Math.round(q.score*100)}/100｜依据 ${q.sampleTime.toFixed(2)} 秒采样。${q.flags.join('；')}`;$('quality-results').append(row)}}
@@ -94,5 +94,5 @@ export async function localCreativeTask(run){
 }
 
 export async function applyEditingSkill(input){
- if(busy)throw Error('请等待当前导入或导出完成');const skill=validateSkill(input);if(!skill.recipe)throw Error('这份 Skill 只有文字指导，需要本地 AI 解读');const r=skill.recipe;setActiveSkill(skill);for(const [key,id] of [['style','creative-style'],['kind','creative-kind'],['target','creative-seconds'],['topic','creative-topic'],['ratio','ratio']])if(r[key]!==undefined)$(id).value=r[key];$('tab-edit').click();return buildCreative();
+ if(busy)throw Error('请等待当前导入或导出完成');const skill=validateSkill(input);if(!skill.recipe)throw Error('这份 Skill 只有文字指导，需要本地 AI 解读');const r=skill.recipe;setActiveSkill(skill,'preset');for(const [key,id] of [['style','creative-style'],['kind','creative-kind'],['target','creative-seconds'],['topic','creative-topic'],['ratio','ratio']])if(r[key]!==undefined)$(id).value=r[key];$('tab-edit').click();return buildCreative();
 }

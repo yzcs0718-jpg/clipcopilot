@@ -1,6 +1,6 @@
 import {parseSkill,validateSkill} from './github-skills-core.js';
 import {discoverGithubSkills,loadGithubSkill} from './github-skills-loader.js';
-import {getActiveSkill,setActiveSkill} from './github-skills-state.js';
+import {getActiveSkill,getSkillMode,setActiveSkill} from './github-skills-state.js';
 import {applyEditingSkill} from './app.js';
 const $=id=>document.getElementById(id),storageKey='clippilot-github-skills-v1';let discovery=null,current=null,library=[],reading=false;
 const say=t=>$('github-skill-status').textContent=t;
@@ -19,7 +19,7 @@ $('github-skill-delete').onclick=()=>{try{if(!library.length)throw Error('没有
 $('github-skill-activate').onclick=()=>{try{if(!current)throw Error('请先加载 Skill');setActiveSkill(current);say('已启用为本地 AI 指导。需要在本地版运行视觉模型；未执行脚本或附加资源。')}catch(e){say(e.message)}};
 $('github-skill-apply').onclick=async()=>{try{if(!current?.recipe)throw Error('这份 Skill 没有 ClipPilot 参数预设');const ok=await applyEditingSkill(current);say(ok?'已按预设生成初稿；在时间线核对后导出。':'预设已载入；若未导入素材，请先导入视频，再生成初稿。')}catch(e){say(e.message)}};
 $('github-skill-disable').onclick=()=>{setActiveSkill(null);say('已停用后续生成的 Skill 指导，已有时间线保留。')};
-document.addEventListener('editing-skill-change',()=>{const active=getActiveSkill();$('github-skill-active').textContent=active?'当前指导：'+active.name+'（不会自动执行脚本）':'当前未启用 Skill'});
+document.addEventListener('editing-skill-change',()=>{const active=getActiveSkill();$('github-skill-active').textContent=active?'当前指导：'+active.name+(getSkillMode()==='preset'?' · 规则参数预设':' · 本地 AI 文字指导')+'（不会自动执行脚本）':'当前未启用 Skill'});
 $('github-skill-backup').onclick=()=>download(JSON.stringify({type:'clippilot-skill-library',version:1,skills:library},null,2),'ClipPilot-Skills.json','application/json');
 $('github-skill-restore').onchange=e=>readTask(async()=>{try{const file=e.target.files[0];if(!file)return;if(file.size>2000000)throw Error('Skill 备份需小于 2MB');const data=JSON.parse(await file.text());if(data.type!=='clippilot-skill-library'||data.version!==1||!Array.isArray(data.skills)||data.skills.length>20)throw Error('备份格式无效');const incoming=data.skills.map(validateSkill),next=[...incoming,...library].filter((s,i,a)=>a.findIndex(x=>identity(x)===identity(s))===i).slice(0,20);localStorage.setItem(storageKey,JSON.stringify(next));library=next;renderLibrary();say('已恢复 Skill 库；请载入一份并手动启用。')}finally{e.target.value=''}});
 $('github-skill-export').onclick=()=>{if(!current)return say('请先读取 Skill');download(current.markdown,'SKILL.md','text/markdown;charset=utf-8')};
