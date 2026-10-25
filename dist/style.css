@@ -26,3 +26,7 @@
 .runtime-panel{margin:32px 0;padding:24px;border-radius:24px;border:1px solid #ddd8cd;background:#f5f2ea}.runtime-panel summary{cursor:pointer}.runtime-panel pre{white-space:pre-wrap;overflow-wrap:anywhere}
 
 .local-ai-panel{margin:32px 0;padding:26px;border-radius:28px;background:#edf0fc;border:1px solid #d4dbee}.local-ai-panel pre{white-space:pre-wrap;overflow-wrap:anywhere}.local-ai-panel h3{margin-top:8px}
+
+.github-skills-panel{margin:32px 0;padding:26px;border-radius:28px;border:1px solid #d8dfd1;background:#eff3e9}.github-skills-panel pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:420px;overflow:auto}.github-skills-panel input[type=url]{min-width:min(390px,100%)}.github-skills-panel .row>label{min-width:0;max-width:100%}.github-skills-panel select{max-width:100%}.github-skills-panel a{color:#243cb7;overflow-wrap:anywhere}.github-skills-panel summary{cursor:pointer}
+
+@media(max-width:720px){header{height:auto;min-height:100px;padding:16px 0;row-gap:12px}#github-skill-shortcut,#local-ai-shortcut,#help-top{font-size:12px}.github-skills-panel{padding:18px}.github-skills-panel .row>label{flex-basis:100%}.github-skills-panel button{font-size:13px;padding:11px 15px}}

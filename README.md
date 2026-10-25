@@ -243,3 +243,21 @@ python3 -m unittest discover -s tests -p 'test_*.py'
 - https://docs.ollama.com/api/tags
 - https://docs.ollama.com/faq （OLLAMA_NO_CLOUD）
 - https://ollama.com/library/qwen3-vl:2b-instruct （示例，不是质量承诺）
+
+## GitHub Skills 接入（GitHub Pages 版）
+
+入口：页面顶部 **GitHub Skills**。支持公开仓库、目录、SKILL.md 文件及 raw 文件链接；也可上传本地 Markdown。仓库读取会发现最多100份 SKILL.md，选定后固定到具体 commit。私有仓库或 GitHub 限流时可下载文件再上传；网页不收集 GitHub Token。
+
+读取后先预览，再选择使用方式：
+
+- **普通 SKILL.md**：启用为本地视觉 AI 的文字指导，在最新版本地版生成剪辑与文案、解读参考视频时传入所选说明。没有本地模型时，不会假装执行自然语言要求。
+- **ClipPilot 参数预设**：文档可带一个 `clippilot` 标记的 JSON 代码块，version为1，支持 style（punchy/gentle/explain）、kind（product/tutorial/story）、target（3–60秒）、ratio、topic、captions（最多20行，每行200字）。点击“应用预设并生成初稿”会填入设置并生成可编辑时间线。页面提供可体验的格式示例。此预设是本项目扩展，并非所有 Agent Skills 的通用执行标准。
+- **脚本与附加资源**：导入只读取主说明，不加载/执行 scripts、references、assets 或第三方 API；不能把任意 Skill 当成已安装的可执行工具。相关依赖线索会显示在预览区。
+
+Skill 可保存、停用、导出及备份。生成方案、JSON和草稿保留本次 Skill 来源、版本与应用方式；撤销与恢复显示实际方案的来源。文案、画面效果与时间线仍需预览核对。
+
+最新版本地包：dist/downloads/ClipPilot-Local.zip。完整源码直接使用 GitHub 仓库的源码归档，避免下载旧版发行包。
+
+验证：Skill URL与路径检查、版本固定、UTF-8、预设字段、实际字幕应用、限流/大文件失败、本地AI指导传入与时间校验有自动测试。GitHub读取和模型输出在新增自动测试中使用模拟响应；完整浏览器及真实模型仍未验收。未调用付费模型。
+
+格式与API参考：https://agentskills.io/specification ，https://docs.github.com/en/rest/repos/contents 。

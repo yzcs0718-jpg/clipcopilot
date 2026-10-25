@@ -88,3 +88,10 @@ Browser file chooser timed out while testing automatic upload and the browser su
 - 当前没有本地模型可做真实推理；浏览器控制没有恢复证据，未冒充已完成 UI 和模型质量验收。
 - 本地发行包提供启动脚本和安装说明，源码包保留 GitHub Pages workflow；均排除运行密钥、模型权重、Git/Sites 私有状态。
 - 全账号授权同步、真实剪映录屏教学、GitHub Pages 发布仍未完成，安装说明与 README 明确披露。
+
+## GitHub Skill 入口
+- 仅渲染文字，不解释 Markdown HTML，不 eval、不动态安装或运行仓库脚本。
+- 来源链接限定官方 GitHub HTTPS域名，拒绝凭证、路径穿越与伪造域名；固定 commit 后读取主说明。GitHub API限流和文件大小失败会提示上传文件。
+- 普通 Skill 仅传入本地视觉AI，明确未加载其附加资源；ClipPilot显式参数块可以真实改变规则粗剪设置与文案。
+- 方案、JSON和草稿记录 Skill应用来源；本地推理仍校验真实抽帧、边界、总时长和重叠，不因Skill放宽。
+- 当前没有浏览器基础设施恢复证据，未重试持续超时的接口。未完成浏览器视觉验收与真实模型质量验收。

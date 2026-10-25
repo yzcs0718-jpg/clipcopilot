@@ -24,7 +24,8 @@ for name,local in [('ClipPilot-Local.zip',True),('ClipPilot-Source.zip',False)]:
    if relative.as_posix() in {'dist/index.html','dist/local-ai-guide.html'}:
     html=p.read_text()
     for filename in ['ClipPilot-Local.zip','ClipPilot-Source.zip']:
-     html=html.replace('href="downloads/'+filename+'"','href="https://clippilot-video-workbench.jayden-97.chatgpt.site/downloads/'+filename+'"')
+     html=html.replace('href="downloads/'+filename+'"','href="https://yzcs0718-jpg.github.io/clipcopilot/downloads/'+filename+'"')
+    html=html.replace('https://yzcs0718-jpg.github.io/clipcopilot/downloads/ClipPilot-Source.zip','https://github.com/yzcs0718-jpg/clipcopilot/archive/refs/heads/main.zip')
     archive.writestr(str(Path('ClipPilot')/relative),html)
    else:archive.write(p,str(Path('ClipPilot')/relative))
  print(name)
