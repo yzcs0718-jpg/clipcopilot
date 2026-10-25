@@ -25,7 +25,7 @@ export function restoreNotes(data,reference){
  if(!data||data.type!=='clippilot-reference-notes'||data.version!==1)throw Error('不是支持的 ClipPilot 拉片笔记文件');
  const saved=data.reference;
  if(!saved||saved.name!==reference.name||!Number.isFinite(saved.duration)||Math.abs(saved.duration-reference.duration)>.1||saved.width!==reference.width||saved.height!==reference.height)throw Error('视频不匹配，请先加载备份对应的源视频');
- if(typeof data.transcript!=='string'||data.transcript.length>12000||!Array.isArray(data.shots)||!data.shots.length||data.shots.length>40)throw Error('笔记内容无效');
+ if(typeof data.transcript!=='string'||data.transcript.length>12000||!Array.isArray(data.shots)||!data.shots.length||data.shots.length>100)throw Error('笔记内容无效');
  let end=0;const shots=data.shots.map(s=>{
   if(!s||!Number.isFinite(s.start)||!Number.isFinite(s.end)||Math.abs(s.start-end)>.02||s.end<=s.start||s.end>reference.duration+.01)throw Error('镜头区间不连续或超出视频范围');
   if(!['note','copy','effect'].every(k=>typeof s[k]==='string'&&s[k].length<=1000)||!Object.hasOwn(recipes,s.effect))throw Error('镜头笔记或效果无效');
