@@ -32,3 +32,5 @@
 @media(max-width:720px){header{height:auto;min-height:100px;padding:16px 0;row-gap:12px}#github-skill-shortcut,#local-ai-shortcut,#help-top{font-size:12px}.github-skills-panel{padding:18px}.github-skills-panel .row>label{flex-basis:100%}.github-skills-panel button{font-size:13px;padding:11px 15px}}
 
 .import-options{margin-top:20px;max-width:520px}.import-options label{display:block;font-size:12px}.import-options select{width:100%;max-width:420px}.import-options>p{font-size:12px!important;line-height:1.7!important;margin:10px 0!important}.import-status{padding:12px 14px;border-radius:14px;background:#edf0fb;color:#263c7d!important;overflow-wrap:anywhere}.import-options button{font-size:12px;padding:9px 14px}
+
+.remix-report{border:1px solid #d9d8cd;background:#eef0ff;border-radius:24px;padding:22px 26px;margin:16px 0 28px}.remix-report p{line-height:1.7}.remix-report small{display:block;line-height:1.6;color:#64645c;margin-top:14px}.remix-report summary{cursor:pointer}

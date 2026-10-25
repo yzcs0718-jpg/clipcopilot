@@ -1,3 +1,4 @@
+import {remixClips,storyboardCopy} from './remix-core.js';
 import {creativePlan} from './creative-core.js';
 import {validate} from './core.js';
 export function frameQuality(rgba,width,height){
@@ -19,7 +20,8 @@ export function qualityWindows(samples,duration,window=6){
 export function qualityPlan(assets,analyses,options={}){
  if(assets.length!==analyses.length||!assets.length)throw Error('素材与画面检查不匹配');
  const windows=analyses.flatMap((samples,asset)=>qualityWindows(samples,assets[asset].duration).map(w=>({...w,asset}))).sort((a,b)=>b.score-a.score||a.asset-b.asset||a.start-b.start).slice(0,100);
- const result=creativePlan(windows.map(w=>({duration:w.end-w.start})),options);
+ const result=creativePlan(windows.map(w=>({duration:w.end-w.start})),{...options,deferRemix:true});
  const choices=result.clips.map(c=>{const w=windows[c.asset];return {asset:w.asset,start:c.start+w.start,end:c.end+w.start,caption:c.caption,effect:c.effect,quality:{score:w.score,sampleTime:w.sampleTime,flags:w.flags}}});
- return {...result,...validate({clips:choices},assets),quality:choices.map(c=>({asset:c.asset,start:c.start,end:c.end,...c.quality})),truncated:result.actual<result.requested-.1};
+ const edited=storyboardCopy(options.style==='reference'?choices:remixClips(choices,assets,{mode:options.mode||'remix'}),result.copy.split('\n'));
+ return {...result,...validate({clips:edited},assets),quality:edited.map(c=>({asset:c.asset,start:c.start,end:c.end,...c.quality})),truncated:result.actual<result.requested-.1};
 }

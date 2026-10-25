@@ -1,3 +1,4 @@
+import {remixClips,storyboardCopy} from './remix-core.js';
 import {validateStyleProfile} from './reference-style.js';
 import {validate} from './core.js';
 export const creativeStyles={punchy:{name:'节奏快剪',seconds:[1.8,1.2,2.4,1.5],effects:['push','none','push','none']},gentle:{name:'舒缓叙事',seconds:[3.8,4.5,3.2],effects:['fade','push','fade']},explain:{name:'清晰讲解',seconds:[3,4,3.5],effects:['none','push','none']}};
@@ -6,7 +7,7 @@ export function generateCopy(topic,kind='product'){
  const lines=kind==='tutorial'?[`关于${value}，先看最终效果`,'把关键步骤，拆开来看','停在细节处，跟着操作一次','把方法记下来，下次再试']:kind==='story'?[`${value}，从这一刻开始`,'留意过程里的变化','让细节替我们讲述','把这个瞬间，留在这里']:[`${value}，从一个日常场景开始`,'换个角度，看看细节','把使用过程，展示清楚',`关于${value}，你最关注什么？`];
  return lines.map(s=>s.slice(0,200));
 }
-export function creativePlan(assets,{style='punchy',topic='',kind='product',target=15,referenceStyle=null}={}){
+export function creativePlan(assets,{style='punchy',topic='',kind='product',target=15,referenceStyle=null,mode='remix',deferRemix=false}={}){
  if(style==='reference')validateStyleProfile(referenceStyle);
  if(style!=='reference'&&!Object.hasOwn(creativeStyles,style))throw Error('请选择支持的剪辑风格');
  if(!Number.isFinite(target)||target<3||target>60)throw Error('目标时长需为 3–60 秒');
@@ -22,7 +23,8 @@ export function creativePlan(assets,{style='punchy',topic='',kind='product',targ
  if(!clips.length)throw Error('素材时长不足');
  // Keep a clear ending without making factual product claims.
  clips.at(-1).caption=copy.at(-1);
- return {...validate({clips},assets),copy:copy.join('\n'),actual:elapsed,requested:target,truncated:elapsed<target-.1,style:profile.name,referenceStyle:style==='reference'?referenceStyle:undefined};
+ const edited=deferRemix?clips:storyboardCopy(style==='reference'?clips:remixClips(clips,assets,{spread:true,mode}),copy);
+ return {...validate({clips:edited},assets),copy:copy.join('\n'),actual:elapsed,requested:target,truncated:elapsed<target-.1,style:profile.name,referenceStyle:style==='reference'?referenceStyle:undefined};
 }
 export function visualEffect(effect,elapsed,duration){
  const progress=Math.max(0,Math.min(1,elapsed/Math.max(.001,duration)));
