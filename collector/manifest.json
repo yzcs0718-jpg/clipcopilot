@@ -1,0 +1,1 @@
+{"manifest_version":3,"name":"ClipPilot 作品采集器","version":"1.0.0","description":"手动采集当前作品页的可见文字和来源，导入 ClipPilot。","permissions":["activeTab","scripting"],"action":{"default_popup":"popup.html"}}

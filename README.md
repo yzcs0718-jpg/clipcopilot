@@ -1,5 +1,245 @@
-# ClipPilot
+> **零费用版（2026-10-24）**：当前网页关闭远程模型按钮，后端 `ALLOW_MODEL_CALLS=0` 默认拦截全部模型请求。无需 API Key 即可使用本地剪辑、文案分镜、抽帧、规则报告和剪映复现建议。此前关于真实 AI 调用的说明属于预留接口能力，当前未启用。
 
-视频创意粗剪、参考视频拉片与教学示意工作台。
+# ClipPilot · 个人视频工作台
 
-正在导入现有项目源码及 GitHub Pages 发布流程。本地视觉 AI 需要自行安装 Ollama 和模型；云模型调用默认关闭。
+公开 Demo：https://clippilot-video-workbench.jayden-97.chatgpt.site
+
+保留圆角艺术版界面，提供剪辑创作、参考视频拉片、个人 Skill、私有 AI API 和本地 Agent 管线。
+
+## 1. 先体验，不需要 API
+
+1. 打开 Demo，关闭首次使用说明。
+2. 点“体验示例”，或导入自己的短视频，自动创建初稿。
+3. 展开“编辑镜头与字幕”，调整起止时间和文案，复制、排序、预览片段。
+4. 先点“连续预览”检查整条时间线；每个片段可“从中间拆分”，字幕保留在两段并可分别修改。点“导出视频”，页面保持前台，生成含原音轨及填写字幕的 WebM。
+导出后会显示成片检查区，可以播放并再次下载 WebM。
+
+5. “更多导出选项”可下载 JSON 和 SRT；“草稿与方案管理”可恢复或导入方案。
+6. “从文案生成分镜”支持每行一句文案，或导入 TXT/Markdown，然后按素材顺序生成不重复区间。它是本地分配规则，不会理解画面。
+7. 切换“视频拉片”，选择参考视频并开始分析；核对候选切点，补充原文案与镜头观察，生成报告并下载 Markdown。
+
+“拉片笔记备份与恢复”可下载镜头区间、观察、文案和效果的 JSON。恢复前先载入并抽帧同一视频；备份不含视频或图片。
+
+拉片上限 10 分钟、最多 120 个采样帧；会漏掉很短的镜头，也可能把运镜或闪光当成切点。字幕不是自动语音转录。效果参数是剪映复现建议，不是原片工程参数。
+
+## 2. 发布到自己的 GitHub Pages（无需终端）
+
+使用配套 `ClipPilot-GitHub-Pages.zip`，不是完整源码包。
+
+1. 解压部署包。
+2. GitHub 创建 Public 仓库，例如 `clippilot`。
+3. 把解压后的所有文件，以及 `assets`、`demo` 文件夹上传到仓库根目录，保留结构。首页必须能直接看到 `index.html`；不要只上传 ZIP。
+4. Settings → Pages → Source: Deploy from a branch → Branch: main → Folder: /(root) → Save。
+5. 等待部署成功，点击 Visit site。
+6. 先运行示例、视频导出，再检查拉片。修改文件并 Commit changes 后自动更新。
+
+完整源码可直接推入仓库，选择 Pages → Source: GitHub Actions。`.github/workflows/pages.yml` 会先执行 JS 测试，再只发布 `dist`。不要把 Sites 自己的 `.openai` 目录、Git 元数据或密钥带入自己的仓库。
+
+## 3. 在电脑本地打开网页
+
+```sh
+python3 -m http.server 8080 --directory dist
+```
+
+浏览器打开 `http://localhost:8080`，建议桌面 Chrome。不要通过双击 HTML 的 file:// 方式运行模块。
+
+## 4. 一个命令运行本地 Agent
+
+先安装 Python 3、ffmpeg 和 ffprobe。无需安装 Python 第三方依赖。
+
+```sh
+python3 tools/agent.py clip1.mp4 clip2.mp4 --output output.mp4 --ratio 16:9 --seconds 3
+```
+
+实际执行阶段：Inspect → Planner → Validator → Renderer → Reviewer。会生成：
+
+- `output.mp4`：H.264/AAC 成片；
+- `output.srt`：字幕；
+- `output.plan.json`：可复用时间线；
+- `output.agent.json`：各阶段记录、尺寸/时长/音轨检查结果。
+
+这是一个实际执行的顺序管线，不是多个独立后台智能体；默认规划为本地规则。
+
+使用网页下载的剪辑方案：
+
+```sh
+python3 tools/agent.py clip1.mp4 clip2.mp4 --plan edit-plan.json --output output.mp4 --ratio 16:9 --burn-captions
+```
+
+按批准的脚本文案剪辑（每个非标题行对应一段；`--plan`、`--script`、`--api` 三选一）：
+
+```sh
+python3 tools/agent.py clip1.mp4 clip2.mp4 --script script.md --output scripted.mp4 --seconds 2 --ratio 9:16 --burn-captions
+```
+
+烧录中文字幕前，请在运行电脑安装可用的中文字体，例如 Noto Sans CJK。工具不覆盖已有成片和旁边的字幕/方案/报告文件。Reviewer 检查媒体结构，不代表已检查创意质量和口型同步，仍应播放核对。
+
+## 5. 配置自己的 AI API
+
+网页不接受模型密钥。先在自己的服务器或电脑配置私有后端，使用 OpenAI-compatible Chat Completions。
+
+环境变量只放本地或服务器中：
+
+```sh
+export MODEL_BASE_URL='https://your-provider.example/v1'
+export MODEL_NAME='your-text-or-multimodal-model'
+export MODEL_API_KEY='YOUR_PROVIDER_KEY'
+export VISION_MODEL_NAME='your-vision-model'
+export APP_TOKEN='YOUR-RANDOM-TOKEN-AT-LEAST-24-CHARACTERS'
+export ALLOWED_ORIGIN='http://localhost:8080'
+python3 server/api.py
+```
+
+默认仅监听 `127.0.0.1:8787`。公开访问时通过 HTTPS 反向代理，`ALLOWED_ORIGIN` 填真实网页源站，例如 `https://YOUR-USERNAME.github.io`，不带仓库路径。部署环境可通过 HOST、PORT 调整监听；不要直接裸露模型 Key。
+
+在网页“创作目标与 AI 配置”里填写后端地址与 APP_TOKEN，点“检测后端连接”。这只验证后端与配置存在；再用一次 AI 编排或深入解读测试提供商的真实调用。
+
+- GET `/api/health`：鉴权及配置状态；
+- POST `/api/plan`：接收 brief 与文件名/时长 → 返回验证过的 clips；
+- POST `/api/analyze`：接收最多 12 张 JPEG 抽帧、文案和笔记 → 返回拉片分析，需要支持图片输入的视觉模型。
+
+所有接口使用 `Authorization: Bearer APP_TOKEN`。模型 Key 和页面访问令牌不同。AI 调用可能产生提供商费用。视频原文件不上传，但 AI 拉片会在确认后发送抽帧和文字。
+
+从本地 Agent 调用自己的后端：
+
+```sh
+python3 tools/agent.py clip1.mp4 clip2.mp4 --api https://your-api.example --brief '剪成场景开头、细节中段、结果结尾' --output ai-edit.mp4 --ratio 16:9
+```
+
+API Docker 配置已附在 `server/Dockerfile`，尚未在本环境运行 Docker：
+
+```sh
+docker build -t clippilot-api ./server
+docker run --rm -p 127.0.0.1:8787:8787 --env-file server/.env --env HOST=0.0.0.0 clippilot-api
+```
+
+`.env` 文件需要你自己根据 `.env.example` 创建，真实内容不要上传 GitHub。Python 直接启动不会自动加载 `.env`；Docker 的 `--env-file` 会加载。
+
+## 6. 接到自己的 AI / 组合成总 Agent
+
+个人 Skill 名称：`edit-video`，已包含脚本、API 说明和行为边界。源码中的 `skills/edit-video` 可供支持 Skills 的宿主使用；在当前 Work 环境使用个人 Skills 页面中的同名 Skill。
+
+给你的宿主 AI 注册 `tools/agent-tools.json` 中的操作：调用规划 API、调用视觉拉片 API、在本地执行 Agent CLI。主 Agent 根据任务选择它们，再查看 `.agent.json`。这个 JSON 是绑定说明，不是已经运行的 MCP 服务；不要把任意 Shell 或本地路径直接公开成 API。
+
+示例指令：“使用 edit-video，把这两个视频剪成 6 秒横版，使用我提供的两句文案，输出带字幕 MP4，并检查时长与音轨。”
+
+## 7. 当前能力与限制
+
+已实现：浏览器剪辑/WebM、可编辑时间线、脚本文案分镜、SRT/JSON、撤销/草稿恢复、拉片抽帧/笔记/规则报告、可配置文字/视觉 AI API、本地 Agent 管线、可选字幕烧录 MP4、个人 Skill、GitHub Pages 配置。
+
+尚未实现：Seedance 文生视频、TTS、自动语音转字幕、独立后台多 Agent 服务、登录/多用户配额。不能承诺所有参考 Skill 的功能都已复刻，也不能承诺完美或生产就绪。
+
+参考 LH Video Gen 的脚本→分镜→媒体渲染流程，未执行其远程安装命令或复制源码。Seedance 原链接未读到完整规范，未集成其模型。
+
+## 8. 验证
+
+```sh
+npm test
+python3 -m unittest discover -s tests -p 'test_*.py'
+```
+
+实际 FFmpeg 测试包含：脚本文案→校验→字幕烧录 MP4→结构检查→拒绝覆盖。AI 提供商响应使用模拟测试，真实密钥未配置，因此真实模型能力不能算通过。网页基础功能此前已在桌面 Chrome 真实操作及导出验证；新增文案分镜已在公开网页生成两段共 8 秒时间线，并完成 WebM 导出；未填写后端配置时的连接提示也已检查。手机端尚未实测。
+
+
+## 2026-10-24 更新与验证
+- 连续预览按剪辑后的顺序和字幕播放，可随时停止；修改时间线会停止旧预览。
+- 片段支持中点拆分，保持原素材区间和总时长，可撤销。
+- 网页导出后可在检查区播放、再次下载。
+- 拉片笔记 JSON 备份、同源视频匹配校验与恢复。
+- 多文件导入采用整批校验；失败时不保留半批新素材，不改变已有素材。
+- 示例素材重新加载时恢复同组素材的上次草稿。
+- 后端未配置令牌时拒绝请求，拒绝布尔值伪装的视频时长。
+- 13 项 JS 与 8 项 Python 测试通过。桌面 Chrome 实测拆分、连续预览、导出 WebM（1280×720 VP9 + Opus、完整解码通过）、拉片抽帧、笔记 JSON 下载与恢复。
+- 真实 AI 服务仍需用户配置；本次没有验证真实模型调用和手机设备。
+
+
+## 四家服务商接入预设与费用保护
+
+网页中“文案编排服务商”和“画面解读服务商”可独立选择智谱、Kimi、DeepSeek、豆包或自定义接口。API Key 仅从后端环境变量读取；前端不会接收模型 Key，也不能覆盖模型服务地址。
+
+当前保持 `ALLOW_MODEL_CALLS=0`，即便误配了密钥、调用 `/api/plan`、`/api/analyze` 或 `/api/test`，也会在发出模型请求前被拦截。不会自动回退到其他服务商。`GET /api/health` 只检查配置，不联系模型服务、不验证余额，不返回密钥。
+
+| 服务商 | 密钥变量 | 文字模型变量 | 视觉模型变量 |
+|---|---|---|---|
+| 智谱 | ZHIPU_API_KEY | ZHIPU_MODEL | ZHIPU_VISION_MODEL |
+| Kimi | KIMI_API_KEY（兼容 MOONSHOT_API_KEY） | KIMI_MODEL | KIMI_VISION_MODEL |
+| DeepSeek | DEEPSEEK_API_KEY | DEEPSEEK_MODEL | DEEPSEEK_VISION_MODEL |
+| 豆包 / 火山方舟 | DOUBAO_API_KEY | DOUBAO_MODEL | DOUBAO_VISION_MODEL |
+
+豆包需要填写控制台可用的 Model ID 或接入点 ID；文字、视觉可分别使用不同模型。完整空白模板在 `server/.env.example`。这些是预留适配，不代表已经替你开通平台账号、配置真实密钥或完成线上模型测试。
+
+2026-10-24 核对的官方参考：
+- 智谱兼容接口：https://docs.bigmodel.cn/cn/guide/develop/openai/introduction
+- 智谱视觉：https://docs.bigmodel.cn/cn/guide/models/vlm/glm-4.6v
+- Kimi 快速开始：https://platform.kimi.com/docs/get-api-key
+- Kimi 视觉：https://platform.kimi.com/docs/guide/use-kimi-vision-model
+- DeepSeek 接口：https://api-docs.deepseek.com/
+- DeepSeek 视觉：https://api-docs.deepseek.com/guides/vision/
+- 火山方舟：https://www.volcengine.com/docs/82379/1298454
+
+默认预设随官方接口文档更新；实际可用性与模型额度以账号控制台为准。此版不调用这些模型，不能把模拟测试当成真实服务商调用成功。
+
+
+## 2026-10-25 本地助手更新
+
+- “导出前检查”会列出素材/时间错误、长短镜头、重复区间、字幕密度和模板占位词；点击“查看这一段”可定位。建议不阻止导出，格式或区间错误仍由导出校验拦截。
+- “本地剪辑助手”提供产品展示、教程讲解、故事记录三种脚本模板。填入模板会替换脚本框，不改变现有时间线；请先改写占位词，再生成分镜。
+- 检查结果可下载为 Markdown，逐镜头建议带成片起始秒数。它是规则检查，没有观看画面或识别音频。
+- 草稿/JSON 方案新增脚本内容、默认秒数与视频方向。源视频仍需重新选择。
+- WebM 长字幕按画幅自适应字号与行数，移除了原来的三行截断。过密文案仍需缩短或延长片段，不能用缩小字号替代可读性检查。
+- 四家远程模型继续关闭，无模型 API 费用。自动化测试：18 项 JS + 15 项 Python，共 33 项通过。
+
+
+## 创意成片、剪映教学与参考博主（2026-10-25）
+
+1. **创意成片**：在“让素材先成为一个故事”填写主题、方向、风格和目标秒数。首次上传默认生成创意初稿与建议文案；已有匹配草稿优先恢复。点击“生成并导出创意视频”得到含原音轨、字幕和轻量效果的 WebM。快剪、舒缓、讲解三种规则风格可选，时间线支持修改画面效果。源素材不足会缩短成片，不重复用同一段来凑时长。
+2. **剪映教学**：上传参考视频会自动抽帧。核对候选镜头，查看每段“在剪映中怎么做”，可手动选择六类复现方式：硬切、推近、变速、淡入淡出、重点字幕、画中画。教学区可生成全部或单镜头教学视频与 SRT。每步按文案长度留阅读时间，保持页面前台。输出为参考帧+字幕+动画示意，无配音、无原音轨，不是真实剪映录屏。
+3. **博主来源与参考节奏**：填写实际博主名及抖音、小红书、B站作品链接，上传对应视频并校正候选分镜后，点“将参考节奏用于创意剪辑”，再生成初稿。方案会注明来源及原链接，JSON/草稿保留参考资料。账号名由用户提供，未核验；只能迁移候选时长节奏、推近和淡入淡出，不能认为还原完整风格。内置风格会明确显示“未模仿特定博主”。
+
+**重要范围**：当前没有自动抓取三个平台账号全部视频的功能。链接只作来源记录，不会自动下载作品。自动文案是根据主题与方向生成的规则建议稿，没有看懂素材或识别口播；不会编造产品性能。采样可提示亮度变化，但不能穷尽或准确识别每个特效，曝光变化也可能被误认为淡入淡出。请先校正效果再生成教学。
+
+项目内 Python 渲染器也支持 `effect: none / push / fade`；MP4 可添加 `--burn-captions`，中文字幕需要系统 CJK 字体。四家远程模型调用保持关闭，没有使用付费模型。
+
+
+## 采集入库与字幕定位（2026-10-25）
+
+- 新增桌面 Chrome Manifest V3 采集器（`collector/`，网站可下载 ZIP），使用 activeTab + scripting；只有用户点击才读当前支持平台页面的标题、description、可见文字与来源链接。无 cookies、隐藏接口、后台同步或视频下载权限。页面内容和来源身份需核对，不等于视频转录。
+- 网页“视频拉片 → 作品与风格库”支持 JSON 导入、来源去重、50 份作品本地保存、删除和备份恢复。正文需清理噪声后再用于文案分析；不自动覆盖原视频字幕。
+- 拉片后应用的参考节奏自动保存，可复用、删除，与作品库一同备份（最多 30 份）。仅迁移已支持的时长与轻量效果，不完整复刻博主风格。
+- SRT 按真实时间解析，拒绝超出视频的区间；手动点击分配后替换各镜头文案。跨镜头字幕按重叠区间出现，报告列出镜头时间、文案、密度及问句/数字/行动引导规则提示。普通 TXT 不生成虚构时间。
+- 新上传参考视频会清掉上一视频的原文案，避免误分析。
+
+验证：37 项 JS（含采集器 API 模拟、来源防伪、字幕时间对齐）+16 项 Python 通过。真实 Chrome 扩展和平台实测未完成，浏览器控制环境持续超时；本轮未将模拟测试当成真平台抓取成功。GitHub 连接仅发现另两个项目的仓库，没有 ClipPilot 的可写仓库，也没有提供建库/Pages 管理工具，未修改其他项目。
+
+未完成的最终要求仍包括：自动批量同步教学账号、语义理解并精选素材、识别全部剪辑效果、真实剪映录屏教学、GitHub Pages 发布、最新版完整浏览器验收。当前是功能增强版，不标为全部完成。
+
+## 2026-10-25 画面优选与多作品节奏统计
+
+- 创意初稿默认开启画面优选：每素材均匀采样 2–12 帧、总计最多 240 帧，按亮度、对比度和空间边缘细节评分，优先取采样附近不重叠区间。显示原素材时间及采样依据，可取消或关闭。采样不足可能错过精彩内容；这是视觉质量排序，不是语义理解、对焦检测或故事精选。首次生成后缓存抽帧评分，重复生成不必重扫。
+- 同来源 2–10 份已拉片参考可统计相对位置的镜头时长中位数、三类轻量效果的多数，最多保留 20 份作品来源。统计结果可用于新素材创作并随方案导出。来源身份仍未核验；不能据此称为完整风格学习。
+- 采集器新增当前页已显示作品链接批量采集：最多 50 条，过滤隐藏链接、账号页、外域与重复项；不翻页、不自动滚动、不抓每部作品正文或下载平台视频。真实平台页面测试仍未完成。
+- 网页新增免费兼容性自检：检查草稿存储、MP4 示例解码，实际编码并回读 1 秒 WebM 测试画面。该检查在访客点击时运行，不代表本轮已完成浏览器验收；未验证成片音轨。
+- 成片导出切到后台会停止并提示，避免继续产出可能缺帧的视频。
+- 自动化：45 项 JS +16 项 Python。浏览器环境无恢复证据，未重复尝试此前持续超时的控制接口。
+
+仍待外部条件：全账号同步需平台许可与授权；真正理解画面需可运行的视觉模型；GitHub Pages 需 ClipPilot 可写仓库及发布权限。当前仅有的两个可写 GitHub 仓库属于其他项目，不覆盖。收费模型保持关闭。
+
+## 2026-10-25 本地视觉模型版（需要自行安装模型）
+
+不再只预留云 API：新增标准库本地服务 `tools/local_app.py` 和本地视觉管线 `server/local_model.py`。网页及文档可下载 `ClipPilot-Local.zip` 与完整 GitHub 部署源码包。源码已有 Pages workflow，但尚未发布到用户 GitHub。
+
+运行 `python3 tools/local_app.py --enable-local-ai`。启动器创建独立 Ollama 子进程，设置 `OLLAMA_NO_CLOUD=1`、随机 loopback 端口；不接入收费服务、不自动下载权重。运行前需 Python 3、较新的 Ollama 和已下载的本地视觉模型。启动器不改变用户已有 Ollama 配置。普通无 AI 模式可运行 `python3 tools/local_app.py`。
+
+- 网页本地版读取已安装模型，运行时核对本地权重、拒绝远程模型和 cloud 名称，要求 vision 能力。
+- 创意模式将 1–12 份素材、合计最多 12 张带时间戳抽帧交给本地视觉模型，要求生成片段、建议文案和取舍理由。拒绝超范围、重叠、超过目标时长、虚构证据时间、无效字幕或效果的方案。失败保留原时间线。模型输出有校验不代表内容必然真实。
+- 参考模式把已有拉片的抽帧、时间、镜头笔记与原文案交给本地视觉模型，补充证据表、重排、文案及剪映建议。不能据静帧确定所有运镜、速度、声音和原始特效参数。
+- 本地 HTTP 服务使用临时令牌、Host/Origin 校验、无 CORS、只监听127.0.0.1。模型连接禁用代理和重定向，只暴露 tags/show/chat，不提供自动下载模型操作。
+- 四家云服务继续保持原来的禁止调用状态；公开网页版没有可用的免费云推理，不会假称打开网址就具备上述本地视觉能力。
+
+验证新增本地 HTTP 实际往返（模型返回为测试夹具）、输入/输出校验、云模型拒绝、独立进程环境及抽帧模拟。当前环境未安装 Ollama/模型，不能完成真实模型输出质量、个人设备性能和完整浏览器验收。整账号授权同步、真实剪映操作录屏、GitHub Pages 发布仍未完成；稀疏抽帧也不能保证识别每个效果。
+
+官方依据：
+- https://docs.ollama.com/api/chat
+- https://docs.ollama.com/api/tags
+- https://docs.ollama.com/faq （OLLAMA_NO_CLOUD）
+- https://ollama.com/library/qwen3-vl:2b-instruct （示例，不是质量承诺）

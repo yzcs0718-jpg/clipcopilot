@@ -1,0 +1,4 @@
+interface:
+  display_name: "ClipPilot Video Agent"
+  short_description: "Plan, render and verify short videos with a personal workflow"
+  default_prompt: "Use $edit-video to turn my footage and approved script into an MP4 with a validated timeline."

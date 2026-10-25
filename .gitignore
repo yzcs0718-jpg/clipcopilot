@@ -1,0 +1,7 @@
+.env
+*.mp4
+*.webm
+__pycache__/
+
+# Small synthetic fixtures are required by demo and integration tests.
+!dist/demo/*.mp4

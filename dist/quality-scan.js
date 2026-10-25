@@ -1,0 +1,8 @@
+import {frameQuality} from './quality-core.js';
+function event(el,type,signal){return new Promise((resolve,reject)=>{const cleanup=()=>{clearTimeout(timer);el.removeEventListener(type,ok);el.removeEventListener('error',fail);signal?.removeEventListener('abort',abort)};const ok=()=>{cleanup();resolve()},fail=()=>{cleanup();reject(Error('视频无法解码'))},abort=()=>{cleanup();reject(Error('已取消画面检查'))};const timer=setTimeout(()=>{cleanup();reject(Error('画面检查超时，请换用 MP4 或关闭画面优选'))},15000);el.addEventListener(type,ok,{once:true});el.addEventListener('error',fail,{once:true});signal?.addEventListener('abort',abort,{once:true});if(signal?.aborted)abort()})}
+export async function scanQuality(assets,{signal,onProgress=()=>{}}={}){
+ const count=Math.max(2,Math.min(12,Math.floor(240/assets.length))),results=[];let done=0;
+ for(let i=0;i<assets.length;i++){const video=document.createElement('video');video.preload='auto';video.muted=true;video.playsInline=true;const canvas=document.createElement('canvas');canvas.width=64;canvas.height=36;const ctx=canvas.getContext('2d',{willReadFrequently:true});
+ try{const ready=event(video,'loadeddata',signal);video.src=assets[i].url;await ready;const frames=[];for(let n=0;n<count;n++){if(signal?.aborted)throw Error('已取消画面检查');const time=Math.max(0,Math.min(assets[i].duration-.001,(n+.5)*assets[i].duration/count));if(Math.abs(video.currentTime-time)>.001){const seek=event(video,'seeked',signal);video.currentTime=time;await seek}ctx.drawImage(video,0,0,64,36);frames.push({time,...frameQuality(ctx.getImageData(0,0,64,36).data,64,36)});onProgress(++done,assets.length*count,i)}results.push(frames)}finally{video.pause();video.removeAttribute('src');video.load()}}
+ return results;
+}

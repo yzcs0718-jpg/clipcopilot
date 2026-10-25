@@ -1,0 +1,4 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {parseSrt,mapSubtitles,timedCopyReport} from '../dist/subtitles.js';
+const raw='1\r\n00:00:00,500 --> 00:00:02,000\r\n你试过吗？\r\n\r\n2\r\n00:00:02,000 --> 00:00:04,000\r\n收藏这3步';
+test('SRT 保留真实时间，跨镜头分配按区间重叠',()=>{const cues=parseSrt(raw,4);assert.equal(cues[0].start,.5);const shots=mapSubtitles([{start:0,end:1},{start:1,end:4}],cues);assert.equal(shots[0].copy,'你试过吗？');assert.equal(shots[1].copy,'你试过吗？ 收藏这3步');assert.match(timedCopyReport(shots),/1.00–4.00s/);assert.match(timedCopyReport(shots),/问句钩子候选/)});
+test('拒绝无时间文本和超出视频的 SRT，不能编造时间',()=>{assert.throws(()=>parseSrt('普通文案',10));assert.throws(()=>parseSrt(raw,2));assert.throws(()=>mapSubtitles([],parseSrt(raw,4)));assert.throws(()=>parseSrt('1\n00:00:09,000 --> 00:00:01,000\n错误',10))});

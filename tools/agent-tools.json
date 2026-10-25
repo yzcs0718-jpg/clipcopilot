@@ -1,0 +1,10 @@
+{
+  "name": "clippilot",
+  "version": "0.6",
+  "description": "Bind these operations in your own agent host. This file is a tool description, not an installed MCP server.",
+  "tools": [
+    {"name":"plan_video","transport":"http","method":"POST","path":"/api/plan","authentication":"Bearer APP_TOKEN","input":{"brief":"string","assets":[{"name":"string","duration":"number"}]}},
+    {"name":"analyze_reference","transport":"http","method":"POST","path":"/api/analyze","authentication":"Bearer APP_TOKEN","note":"Requires vision-capable model and explicit approval to send reference frames"},
+    {"name":"run_local_pipeline","transport":"cli","entrypoint":"python3 tools/agent.py","arguments":["inputs...","--output","output.mp4","--ratio","16:9"],"note":"Local file access and ffmpeg required. Do not expose arbitrary shell execution or filesystem paths as a public API."}
+  ]
+}
