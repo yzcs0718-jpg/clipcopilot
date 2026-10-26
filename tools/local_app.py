@@ -8,6 +8,7 @@ from urllib.parse import urlsplit
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'server'))
 from local_model import LocalModel,LocalError,creative,analyze
+from effect_analysis import analyze_effects
 
 class LocalHandler(SimpleHTTPRequestHandler):
  def log_message(self,*args):pass
@@ -46,7 +47,7 @@ class LocalHandler(SimpleHTTPRequestHandler):
   try:
    size=int(self.headers.get('Content-Length','0'))
    if not 0<size<=3000000:raise LocalError('请求需小于 3MB')
-   data=json.loads(self.rfile.read(size));result=(creative if path.endswith('/creative') else analyze)(data,self.server.client)
+   data=json.loads(self.rfile.read(size));result=(analyze_effects if data.get('effectDetail') is True and path.endswith('/analyze') else creative if path.endswith('/creative') else analyze)(data,self.server.client)
    self.reply(200,result)
   except (ValueError,TypeError,KeyError) as e:self.reply(400,{'error':str(e)})
   except Exception:self.reply(502,{'error':'本地任务失败，请查看模型、内存和输入格式'})

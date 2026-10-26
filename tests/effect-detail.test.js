@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {intervalTimes} from '../dist/effect-detail.js';
+test('效果采样包含镜头边界上下文，始终落在真实视频范围内',()=>{for(const [shot,duration] of [[{start:0,end:1},1],[{start:3,end:4},8],[{start:9,end:10},10]]){const times=intervalTimes(shot,duration);assert.equal(times.length,12);assert.equal(new Set(times).size,12);assert.ok(times.every(t=>t>=0&&t<duration));assert.ok(times.every((t,i)=>!i||t>times[i-1]))}assert.ok(intervalTimes({start:3,end:4},8)[0]<3)});
+test('拒绝越界、倒序与非数值的效果采样区间',()=>{for(const shot of [{start:2,end:1},{start:-1,end:1},{start:0,end:11},{start:NaN,end:1}])assert.throws(()=>intervalTimes(shot,10))});
