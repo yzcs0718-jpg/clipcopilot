@@ -1,0 +1,4 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {effectEvidence} from '../dist/effect-evidence.js';
+test('比较真实帧像素并保留来源时间，不把变化解释成确定特效',()=>{const r=effectEvidence([{time:0,pixels:[0,0,0],image:'a'},{time:1,pixels:[255,255,255],image:'b'}],{start:0,end:2});assert.equal(r.pairs[0].difference,1);assert.equal(r.pairs[0].brightnessDelta,1);assert.equal(r.pairs[0].before,'a');assert.match(r.limit,/不能证明/)});
+test('静止画面差异为零；区间外采样不参与',()=>{const r=effectEvidence([{time:0,pixels:[0]},{time:2,pixels:[100]},{time:3,pixels:[100]},{time:4,pixels:[255]}],{start:2,end:4});assert.equal(r.pairs.length,1);assert.equal(r.pairs[0].difference,0)});
+test('采样不足如实报告，不生成效果',()=>{assert.equal(effectEvidence([],{start:0,end:1}).pairs.length,0);assert.match(effectEvidence([],{start:0,end:1}).observation,/不足/)});
