@@ -1,0 +1,1 @@
+export async function runAnalysisStages(stages,onStage=()=>{}){for(let index=0;index<stages.length;index++){try{onStage(index,stages[index]);if(await stages[index].run()!==true)return{complete:false,index}}catch(error){return{complete:false,index,error}}}return{complete:true}}

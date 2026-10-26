@@ -117,3 +117,6 @@ Original fixture and generator: `dist/demo/spatial-fixture.mp4`, `tools/make_spa
 Regression suite: 119 passing JS tests at this stage, including CTC, heatmap regions, matte bounds, textured-circle vs solid-circle controls, text self-match/global-motion rejection, blank-frame tracking and teaching text preservation. Unit counts are not model accuracy.
 
 Final local preview export validation: the per-item circular-window button generated a real 16.987-second MP4, 960×540, VP9 in the available browser, no audio. Independently decoded with ffmpeg and visually inspected at 7 seconds: the frame contains the actual circle-window reference, 81%/58% center, 22%-width diameter and the corresponding three 剪映 steps. MP4 container success is not a claim of H.264 compatibility or a real 剪映 recording.
+
+
+Final coordinator check: cancellation or failure of OCR now stops the depth-analysis pipeline instead of starting spatial models after a user cancellation. Actual browser test after loading the original fixture: stopped OCR, observed explicit depth-analysis stopped status and unchanged “spatial analysis not run” status. Two new stage-coordinator tests pass; final JS suite count is 121. Core Chinese/window/co-motion results were also verified on the deployed GitHub Pages site.

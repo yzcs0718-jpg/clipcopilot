@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import{runAnalysisStages}from '../dist/analysis-stages.js';
+test('文字任务取消后不启动空间模型，也不冒充整条任务完成',async()=>{let calls=[];const r=await runAnalysisStages([{run:async()=>{calls.push('text');return false}},{run:async()=>{calls.push('spatial');return true}}]);assert.equal(r.complete,false);assert.deepEqual(calls,['text'])});
+test('仅两个阶段都明确成功才标记完成，异常会阻断后续阶段',async()=>{const ok=await runAnalysisStages([{run:async()=>true},{run:async()=>true}]);assert.equal(ok.complete,true);let next=false;const bad=await runAnalysisStages([{run:async()=>{throw Error('network')}},{run:async()=>{next=true;return true}}]);assert.equal(bad.complete,false);assert.equal(next,false)});

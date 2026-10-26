@@ -1,3 +1,4 @@
+import {runAnalysisStages} from './analysis-stages.js';
 import {referenceSampleTimes} from './reference-sampling.js';
 import {buildEffectAudit,renderEffectAudit,auditReport} from './effect-audit.js';
 import {textSteps,textEvidenceReport} from './text-evidence-core.js';
@@ -107,4 +108,4 @@ $('ref-short-demo').onclick=async()=>{try{$('ref-density').value='24';const r=aw
 document.addEventListener('spatial-evidence-result',event=>{spatialEvidence=event.detail;updateAudit();if(reference&&shots.length){lastReport=localReport();$('ref-output').textContent=lastReport}});
 
 $('ref-spatial-demo').onclick=async()=>{try{const r=await fetch(new URL('./demo/spatial-fixture.mp4',import.meta.url));if(!r.ok)throw Error('空间测试片读取失败');await load(new File([await r.blob()],'spatial-fixture.mp4',{type:'video/mp4'}));await $('ref-scan').onclick();say('原创中文花字 / 圆形窗口测试片已载入。点击深度拉片，真实运行文字与空间模型；测试答案不会注入检测。')}catch(e){say(e.message)}};
-let deepRunning=false;$('ref-deep').onclick=async()=>{if(deepRunning||scanning||loading)return;if(!reference)return say('请先选择视频');deepRunning=true;try{if(!shots.length&&!await $('ref-scan').onclick())return;say('深度拉片 1/2：识别画面文字…');await $('text-start').onclick();say('深度拉片 2/2：检查圆形窗口、人物遮罩与跟随关系…');await $('spatial-start').onclick();say('文字与空间检查已结束。请查看各步骤的成功或失败状态、证据和限制；未知效果不会补猜。');$('effect-audit-list').scrollIntoView({behavior:'smooth',block:'start'})}finally{deepRunning=false}};
+let deepRunning=false;$('ref-deep').onclick=async()=>{if(deepRunning||scanning||loading)return;if(!reference)return say('请先选择视频');deepRunning=true;try{if(!shots.length&&!await $('ref-scan').onclick())return;const stages=[{title:'识别画面文字',run:()=>$('text-start').onclick()},{title:'检查圆形窗口、人物遮罩与跟随关系',run:()=>$('spatial-start').onclick()}],result=await runAnalysisStages(stages,(i,stage)=>say(`深度拉片 ${i+1}/2：${stage.title}…`));if(!result.complete)return say(`深度拉片未继续：${stages[result.index].title}已停止或未完成，请查看该步骤状态。`);say('文字与空间检查已结束。请查看各步骤的成功或失败状态、证据和限制；未知效果不会补猜。');$('effect-audit-list').scrollIntoView({behavior:'smooth',block:'start'})}finally{deepRunning=false}};
