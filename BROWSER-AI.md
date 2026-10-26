@@ -33,3 +33,32 @@
 - https://huggingface.co/Xenova/ast-finetuned-audioset-10-10-0.4593
 - https://huggingface.co/Xenova/whisper-tiny
 - https://huggingface.co/HuggingFaceTB/SmolVLM-500M-Instruct
+
+
+## 2026-10-26: whole-video evidence and OCR
+
+The public app now keeps a nine-category coverage ledger. `待确认` is not an absence finding. Masking, cutout, tracking, exact grading, speed curves, blending modes and original presets remain unrecognized. This is not acceptance of the complete “any video / every effect” requirement.
+
+- Added temporal candidates for short white flashes and static runs bordered by motion. Camera flash, inserted white footage and static source assets remain alternative explanations. Sampling boundaries are approximate.
+- Added Tesseract.js 6.0.1, core 6.0.0, `chi_sim` language model (includes Latin), browser WASM only. Public engine/model files are downloaded; source frames stay in the browser. No paid inference service is used. Three overlapping horizontal regions improve segmentation. At most 120 timestamps, approximately one per second for short videos. This will miss short text/animations.
+- English fixture passed; **Chinese self-test failed**, even after segmentation changes. UI explicitly discloses this. Do not market Chinese recognition as verified. First full-frame OCR attempts failed the English video too; regional OCR was required. Low-confidence raw output is available separately and is not adopted as a lesson.
+- OCR line content/boxes produce only position/size reproduction suggestions, not font, animation-preset, mask or tracking identification. Repeated text can be in the photographed scene rather than added subtitles.
+- Teaching defaults to the detected evidence list. Unknown categories no longer silently become generic hard-cut lessons. Manual recipes remain a separate explicit choice. It still produces reference-frame and text instruction video, **not a real screen recording of 剪映**.
+
+### Reproducible original fixture
+
+`dist/demo/effects-fixture.mp4` is original, programmatically generated geometric footage. No third-party or personal media. Source generator: `tools/make_effect_fixture.py` (requires Pillow, ffmpeg and the referenced system font).
+
+Ground truth: 7 seconds, fade 0–0.5s, white interval 1.0–1.2s, static interval 3.0–4.0s, moving English caption `CUT TO THE BEAT`, sine audio. The detector does not read these ground-truth values; the same native video scan is used as with uploaded files.
+
+Actual Chrome UI tests on the local preview:
+
+- 43 video samples; fade candidate 0–0.50s.
+- White-flash candidate bracket 0.83–1.33s, white samples 1.00 and 1.17s. This is not an exact reconstruction of 1.0–1.2s.
+- Static-run candidate 3.00–3.83s (last sampled static frame, not the true 4.0s endpoint).
+- Regional OCR recognized the English caption in all seven sampled timestamps, 0.50–6.50s, and joined it into one position-change candidate. It estimated horizontal centers about 40% → 51%.
+- Cancelled OCR during engine startup: explicit stopped status, analysis button enabled again; no late result replaced it.
+- Exported selected-interval evidence teaching: real 28.016s MP4, decoded 960×540 video, VP9 codec in the available Chrome environment. No audio stream. Inspected an extracted frame: it contains white-flash opacity instructions and evidence times. This does not prove universal MP4 codec compatibility.
+- Automated JS suite: 106 passing tests. Unit cases test boundaries/no invented observations; these counts are not recognition accuracy.
+
+The button “测试字幕 / 闪白 / 定格” loads this fixture through normal video decoding and scan. The app does not inject reference answers into detection or OCR.

@@ -1,0 +1,9 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {detectTemporalEffects} from '../dist/temporal-effects.js';import {buildEffectAudit} from '../dist/effect-audit.js';
+const frame=(time,value)=>({time,pixels:Array(64*36*3).fill(value),pixelWidth:64,pixelHeight:36});
+test('短暂白帧有前后对照与试做步骤，持续白画面不当闪白',()=>{const r=detectTemporalEffects([frame(0,80),frame(.167,255),frame(.334,80)]);assert.equal(r[0].kind,'flash');assert.match(r[0].reason,/现场闪光/);assert.equal(detectTemporalEffects([frame(0,255),frame(.167,255),frame(.334,255)]).length,0)});
+test('定格候选要求连续相近画面且前后有变化，全静态素材不冒充定格',()=>{const r=detectTemporalEffects([frame(0,30),frame(.2,80),frame(.4,80),frame(.6,80),frame(.8,80),frame(1,160)]);assert.equal(r[0].kind,'freeze');assert.equal(r[0].start,.2);assert.equal(r[0].end,.8);assert.equal(detectTemporalEffects(Array.from({length:10},(_,i)=>frame(i*.2,80))).length,0)});
+test('整片清单九类均有状态，没有语义检测时不会假称识别蒙版和跟踪',()=>{const rows=buildEffectAudit([frame(0,80),frame(.2,255),frame(.4,80)],[{start:0,end:.5}]);assert.equal(rows.length,9);assert.equal(rows.find(r=>r.name==='转场').status,'有候选');assert.equal(rows.find(r=>r.name==='蒙版').status,'待确认');assert.equal(rows.find(r=>r.name==='音效').status,'尚未运行');assert.equal(rows.find(r=>r.name==='字幕动画').status,'尚未运行')});
+
+test('连续两个白采样点作为一次闪白，不能因高亮持续而漏报',()=>{const r=detectTemporalEffects([frame(0,80),frame(.167,255),frame(.334,255),frame(.501,80)]);assert.equal(r.filter(x=>x.kind==='flash').length,1)});
+import {buildEvidenceLesson} from '../dist/lesson-core.js';
+test('检测教学采用真实线索的时间与步骤，未知项目不会替换成硬切教程',()=>{const items=detectTemporalEffects([frame(0,80),frame(.167,255),frame(.334,80)]);const lessons=buildEvidenceLesson(items,[{time:0,image:'frame0'},{time:.167,image:'white'}]);assert.equal(lessons.length,3);assert.match(lessons[0].text,/白色素材/);assert.equal(lessons[0].stepCount,3);assert.throws(()=>buildEvidenceLesson([],[{time:0,image:'frame0'}]),/没有可用检测线索/)});

@@ -23,3 +23,8 @@ export function effectHint(samples,shot){
  if(Math.abs(delta)>.22&&monotonic)return {effect:'叠化 / 淡入淡出',evidence:'采样亮度持续变化，可能是淡入淡出，也可能是曝光或场景光线变化。请播放核对。'};
  return {effect:'硬切 / 节奏切换',evidence:'未找到足够的可验证特效证据。可先看硬切教学，或手动选择你想学习的效果；不能据此排除运镜、变速或其他特效。'};
 }
+
+export function buildEvidenceLesson(items,samples){
+ if(!items.length||!samples.length)throw Error('当前范围没有可用检测线索；请先分析画面文字或切换到“手动选择的学习方法”。未知效果不会生成虚构教学。');
+ let cursor=0;return items.flatMap((item,index)=>{const pic=samples.reduce((a,b)=>Math.abs(b.time-item.start)<Math.abs(a.time-item.start)?b:a);return item.steps.map((text,step)=>{const duration=Math.min(12,Math.max(4,Math.ceil(text.replace(/\s/g,'').length/7))),start=cursor;cursor+=duration;return{label:`线索 ${index+1}`,shot:index+1,range:`${item.start.toFixed(2)}–${item.end.toFixed(2)} 秒`,effect:item.title,text,step,stepCount:item.steps.length,parameter:item.parameters||'检测候选的试做步骤，需对照原片校正',check:item.reason,image:pic.image,start,duration}})});
+}
