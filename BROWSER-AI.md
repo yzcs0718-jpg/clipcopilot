@@ -84,3 +84,36 @@ The button “测试字幕 / 闪白 / 定格” loads this fixture through norma
 - JS suite: 111 tests pass, including packed RGB compatibility, bounded sampling, cut-boundary OCR allocation, high-fps static context, and rejection of slow movement as freeze. These are regression tests, not a real-world accuracy benchmark.
 
 No improvement here establishes arbitrary masks, cutout, tracking, LUT identification or all-effects coverage.
+
+## 2026-10-26: PP-OCRv5, geometric windows, gated person mattes and co-motion
+
+This update is a working browser-local implementation of limited evidence and reproduction paths. It is not acceptance of arbitrary effect recognition, font/preset identification or original-project reconstruction.
+
+### Browser inference
+
+- Replaced Tesseract with official PaddlePaddle PP-OCRv5 mobile detector and recognizer, run by ONNX Runtime Web 1.22.0 / WASM CPU. Detection and CTC decoding use the real model outputs; no expected text is injected. Model revisions are pinned in `dist/paddle-ocr-worker.js`. A copy of the Apache-2.0 character dictionary from the official recognition model configuration is shipped as `paddle-characters.json`.
+- Same formerly failing self-test image now reads both `CUT TO THE BEAT` and `剪辑节奏` correctly in the actual browser. The prior Tesseract failure remains documented above as history, not current capability.
+- An original six-second MP4 with the same Chinese text in white outline, colored outline, and offset-shadow renderings was decoded through the normal reference pipeline. OCR returned the correct Chinese string at all six sampled timestamps, joined as one movement track. Color samples and possible edge colors are measured from actual pixels; their fill/outline role, font, width, preset and shadow parameters are NOT definitively identified.
+- Google MediaPipe Tasks Vision was attempted but rejected for this environment: ESM importScripts incompatibility and unavailable WebGL service. Final code uses the ONNX Community conversion of MediaPipe Selfie Segmentation via WASM CPU instead, with a pinned revision.
+- Initial segmentation falsely marked abstract geometry as people. That output was not accepted as reliable: an independent UltraFace face detector and face-center/matte consistency check were added. Final adoption requires face score >=0.98, meaningful matte area and a positive matte at the detected face center. Back views, hidden/small faces and arbitrary non-person subjects are therefore out of scope and remain unknown. Face presence detection does not identify the person.
+- The original geometric video is a negative control: after gating, actual browser inference returned zero reliable person frames out of twelve. Google MediaPipe's official public portrait image is an independent positive self-test: actual browser inference produced a foreground matte. Its result is explicitly separate from uploaded-video findings. A successful self-test is not a real-world cutout-accuracy benchmark.
+
+### Geometry and motion evidence
+
+- Circle candidates combine smoothed edge votes, closed color-region validation, radial boundary support and interior spatial texture. At least three temporally consistent detections are required. Solid circles are tested as a negative control. Natural circular objects and stickers remain alternatives; arbitrary masks, feathering and occlusion are not inferred.
+- Template features are measured across continuous frames. Text-box self-matches are excluded and approximate global translations are filtered before adopting a text/target co-motion candidate. No semantic target identity is claimed. Occlusions, low texture, repeated patterns and long sampling gaps can fail; co-motion can also come from manual keyframes or photographed text.
+- Actual original fixture: circle center measured approximately 81% horizontally / 58% vertically, diameter 22% of video width; generator truth is 81.25% / 58.33%, diameter 21.875%. Whole-video result persisted across twelve sampled frames.
+- Actual original fixture: text/independent-feature co-motion found from 0.50–5.50s, six paired observations; steps include measured text centers approximately 24% →39% horizontally at 31% vertically. They are reproduction suggestions, not proof of an automatic tracking tool.
+- Spatial analysis samples up to 90 frames. Long videos are sparse and may not support tracking; lack of a candidate must not be read as absence of effects.
+
+### UI and teaching
+
+“深度拉片” runs OCR then spatial analysis sequentially with the existing media lock, visible progress, cancellation and no keys or paid API. New mask/motion evidence joins the nine-category report and the detected-evidence teaching. The cutout row says “已生成复现遮罩”, never “原片抠像已准确识别”. Matte PNGs can be downloaded locally. The official portrait self-test never updates the uploaded video's evidence ledger.
+
+Each evidence item can generate its own MP4 teaching. Long instructions are split into readable segments instead of being silently clipped. These are reference-frame / text instructions, not actual 剪映 screen recordings.
+
+Original fixture and generator: `dist/demo/spatial-fixture.mp4`, `tools/make_spatial_fixture.py`. The Noto CJK font must be supplied to the generator; it is not redistributed in the repository. No personal or third-party footage is embedded in that fixture. The official public portrait is fetched only for the independent self-test, not bundled.
+
+Regression suite: 119 passing JS tests at this stage, including CTC, heatmap regions, matte bounds, textured-circle vs solid-circle controls, text self-match/global-motion rejection, blank-frame tracking and teaching text preservation. Unit counts are not model accuracy.
+
+Final local preview export validation: the per-item circular-window button generated a real 16.987-second MP4, 960×540, VP9 in the available browser, no audio. Independently decoded with ffmpeg and visually inspected at 7 seconds: the frame contains the actual circle-window reference, 81%/58% center, 22%-width diameter and the corresponding three 剪映 steps. MP4 container success is not a claim of H.264 compatibility or a real 剪映 recording.
