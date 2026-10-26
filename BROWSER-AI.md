@@ -62,3 +62,25 @@ Actual Chrome UI tests on the local preview:
 - Automated JS suite: 106 passing tests. Unit cases test boundaries/no invented observations; these counts are not recognition accuracy.
 
 The button “测试字幕 / 闪白 / 定格” loads this fixture through normal video decoding and scan. The app does not inject reference answers into detection or OCR.
+
+
+## 2026-10-26: denser temporal sampling and model comparison
+
+- Default reference scan increased from ~6fps / 600 frames to ~24fps / 3600 frames. A 7s clip now yields 169 samples. Long clips reduce density to honor the cap; the actual interval is disclosed. RGB frames use Uint8Array (6912 bytes per sample) instead of JS number arrays. Both segmentation and visual-evidence code accept packed pixels.
+- Added scan cancellation. It rejects partial results and restores previous complete samples/shot results. Actual Chrome test: stopped a rescan, saw explicit stopped status, scan button reenabled, and previous 169-sample results remained.
+- Static-run validation now checks 0.25s context and the total start/end difference. This keeps detection meaningful at higher sample rates and avoids calling slowly accumulating movement a freeze.
+- OCR adds samples ±0.1/0.2s around candidate shot boundaries, up to 240 frames. Actual Chrome test yielded 12 input frames including a blank white-flash sample, then one correct English position-change track; uncertain shape-as-text output was not adopted.
+- Replaced the small integer Chinese OCR model with official floating-point tessdata_best tag 4.1.0, via jsDelivr, about 13.1MB. Engine stays browser-local. Download source: https://cdn.jsdelivr.net/gh/tesseract-ocr/tessdata_best@4.1.0/chi_sim.traineddata . Uses separate model-cache namespace, not the old cached integer model.
+- **Chinese still fails the same self-test**: raw output is closer but reads 剪辑节奏 incorrectly as 剪辑节夫. Do not call this accepted Chinese support. The expected answer is checked only by the self-test status, never injected into OCR results or lessons. The public UI retains the failure notice.
+
+### Actual same-video temporal comparison
+
+`dist/demo/short-flash-fixture.mp4`, generated with `tools/make_effect_fixture.py OUTPUT --short-flash`, contains exactly one full-white frame: decoded frame 32 at 30fps (about 1.067–1.100s). It has the same original geometric animation, fade and static interval as the longer-white fixture. No third-party media.
+
+- Fast 6fps scan: 43 samples, did not detect that flash.
+- Detailed 24fps scan: 169 samples, flash at sampled 1.083s, contextual bracket 1.042–1.125s. This is still a bracket, not exact original parameter reconstruction.
+- Detailed static interval: 3.000–3.958s, versus 3.000–3.833s at 6fps.
+- Both paths use the uploaded-file scanning implementation. Fixture ground truth is not read by the detector.
+- JS suite: 111 tests pass, including packed RGB compatibility, bounded sampling, cut-boundary OCR allocation, high-fps static context, and rejection of slow movement as freeze. These are regression tests, not a real-world accuracy benchmark.
+
+No improvement here establishes arbitrary masks, cutout, tracking, LUT identification or all-effects coverage.

@@ -1,6 +1,7 @@
+import {isPixelArray} from './reference-sampling.js';
 // Pixel measurements describe visible changes; they do not identify editing software.
 export function effectEvidence(samples,shot){
- const frames=samples.filter(f=>f.time>=shot.start&&f.time<shot.end&&Array.isArray(f.pixels)&&f.pixels.length).sort((a,b)=>a.time-b.time);
+ const frames=samples.filter(f=>f.time>=shot.start&&f.time<shot.end&&isPixelArray(f.pixels)&&f.pixels.length).sort((a,b)=>a.time-b.time);
  const pairs=[];for(let i=1;i<frames.length;i++){const a=frames[i-1],b=frames[i];if(a.pixels.length!==b.pixels.length||b.time<=a.time)continue;const brightness=f=>f.pixels.reduce((sum,v)=>sum+v,0)/(255*f.pixels.length);let difference=0;for(let j=0;j<a.pixels.length;j++)difference+=Math.abs(a.pixels[j]-b.pixels[j]);pairs.push({from:a.time,to:b.time,difference:difference/(255*a.pixels.length),brightnessDelta:brightness(b)-brightness(a),before:a.image,after:b.image})}
  const ranked=[...pairs].sort((a,b)=>b.difference-a.difference);const peak=ranked[0];const observation=!peak?'采样不足，无法比较该区间的连续变化。':`采样变化最大处：${peak.from.toFixed(2)}–${peak.to.toFixed(2)} 秒。像素平均差 ${(peak.difference*100).toFixed(1)}%；整体亮度${peak.brightnessDelta>=0?'增加':'减少'} ${(Math.abs(peak.brightnessDelta)*100).toFixed(1)} 个百分点。`;
  return {observation,pairs:ranked.slice(0,3),limit:'像素变化可能来自剪辑、实拍运镜、主体运动或光线；这些测量不能证明特效类型。采样间的短暂效果可能漏掉。'};

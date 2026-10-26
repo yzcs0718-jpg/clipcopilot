@@ -13,6 +13,6 @@ for n in range(210):
  d.rounded_rectangle((38+motion*12,230,600,305),radius=12,fill=(245,245,240))
  d.text((52+motion*12,244),'CUT TO THE BEAT',font=font,fill=(10,20,35))
  if t<.5:im=Image.blend(Image.new('RGB',im.size),im,t/.5)
- if 1<=t<1.2:im=Image.new('RGB',im.size,'white')
+ if (1.04<=t<1.08 if '--short-flash' in sys.argv else 1<=t<1.2):im=Image.new('RGB',im.size,'white')
  p.stdin.write(im.tobytes())
 p.stdin.close();assert p.wait()==0

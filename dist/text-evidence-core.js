@@ -1,7 +1,10 @@
 // OCR observations are image evidence, never an assertion of an editor preset.
-export function textSampleTimes(duration,max=120){
+export function textSampleTimes(duration,max=120,shots=[]){
  if(!Number.isFinite(duration)||duration<=0||duration>600)throw Error('视频时长必须在 0–600 秒内');
- const count=Math.min(max,Math.max(1,Math.ceil(duration)));return Array.from({length:count},(_,i)=>Math.min(duration-.001,(i+.5)*duration/count));
+ if(!Number.isInteger(max)||max<1||max>240)throw Error('无效 OCR 采样上限');
+ const count=Math.min(max,120,Math.max(1,Math.ceil(duration))),base=Array.from({length:count},(_,i)=>Math.min(duration-.001,(i+.5)*duration/count));
+ const hints=shots.slice(0,100).flatMap(s=>[s.start,s.end]).filter(t=>Number.isFinite(t)&&t>0&&t<duration).flatMap(t=>[-.2,-.1,0,.1,.2].map(d=>Math.max(0,Math.min(duration-.001,t+d))));
+ const result=[...base];for(const time of hints){if(result.length>=max)break;if(!result.some(t=>Math.abs(t-time)<.025))result.push(time)}return result.sort((a,b)=>a-b);
 }
 export function extractTextLines(data,width,height,time){
  if(!width||!height||!Number.isFinite(time))return [];
@@ -14,4 +17,4 @@ export function buildTextTracks(frames,step){
  return tracks.map(t=>{const a=t.first.box,b=t.last.box;return{...t,moving:t.observations.length>=2&&Math.hypot(b.x-a.x,b.y-a.y)>.035,scaling:t.observations.length>=2&&Math.abs(b.w/a.w-1)>.2}});
 }
 export function textSteps(track){const a=track.first.box,b=track.last.box,steps=[`文本 → 新建文本，输入“${track.text}”，先校正 OCR 错字。`,`将文字框中心放到画面横向 ${Math.round((a.x+a.w/2)*100)}%、纵向 ${Math.round((a.y+a.h/2)*100)}% 处；文字框约占画面宽度 ${Math.round(a.w*100)}%。字体、描边、阴影需要对照原片选择。`];if(track.moving)steps.push(`在 ${track.start.toFixed(2)} 秒添加位置关键帧，在 ${track.end.toFixed(2)} 秒移到横向 ${Math.round((b.x+b.w/2)*100)}%、纵向 ${Math.round((b.y+b.h/2)*100)}%；这是位置变化的试做方案，实景文字与运镜也会产生相似证据。`);if(track.scaling)steps.push(`同一文字框采样宽度变为约 ${Math.round(b.w/a.w*100)}%，可在首尾试加缩放关键帧；OCR 框抖动、透视和遮挡也可能造成宽度变化。`);steps.push(`仅在 ${track.start.toFixed(2)}–${track.end.toFixed(2)} 秒采样中见到文字，不代表准确入出点；逐帧校准文本轨两端和动画曲线。无法据此判断打字机、蒙版或跟踪预设。`);return steps}
-export function textEvidenceReport(data){return ['## 画面文字识别与位置线索（OCR 候选）',`采样 ${data.frames.length} 帧，间隔约 ${data.step.toFixed(2)} 秒；置信分数不是准确率。中文自检尚未通过。文字可能来自字幕、招牌或水印。短暂动画、花字、小字可能漏掉。`,...data.tracks.map(t=>`${t.start.toFixed(2)}–${t.end.toFixed(2)} 秒：${t.text}\n${textSteps(t).join('\n')}`),data.tracks.length?'':'未获得可靠文字，不能认定没有字幕。'].join('\n\n')}
+export function textEvidenceReport(data){return ['## 画面文字识别与位置线索（OCR 候选）',`采样 ${data.frames.length} 帧，基础间隔约 ${data.step.toFixed(2)} 秒；分段边界附近加密；置信分数不是准确率。中文自检尚未通过。文字可能来自字幕、招牌或水印。短暂动画、花字、小字可能漏掉。`,...data.tracks.map(t=>`${t.start.toFixed(2)}–${t.end.toFixed(2)} 秒：${t.text}\n${textSteps(t).join('\n')}`),data.tracks.length?'':'未获得可靠文字，不能认定没有字幕。'].join('\n\n')}

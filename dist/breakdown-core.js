@@ -1,3 +1,4 @@
+import {isPixelArray} from './reference-sampling.js';
 import {timedCopyReport} from './subtitles.js';
 export const recipes={
  '硬切 / 节奏切换':'在剪映中导入素材 → 把播放头放到动作或句子结束处 → 分割 → 删除冗余区间 → 拖动片段首尾贴齐。先用直接切换检查节奏，避免每个切口都加转场。',
@@ -9,7 +10,7 @@ export const recipes={
 };
 export function boundaries(samples,duration,threshold=.22){
  if(!Number.isFinite(duration)||duration<=0)throw Error('无效视频时长');
- const cuts=[0];for(let i=1;i<samples.length;i++){const a=samples[i-1],b=samples[i];if(!Array.isArray(a.pixels)||a.pixels.length!==b.pixels.length)throw Error('无效采样');let d=0;for(let j=0;j<a.pixels.length;j++)d+=Math.abs(a.pixels[j]-b.pixels[j]);const score=d/a.pixels.length/255;if(score>=threshold&&b.time-cuts.at(-1)>=.8&&duration-b.time>=.5)cuts.push(b.time);if(cuts.length>=20)break}return [...cuts,duration].map((t,i,a)=>i<a.length-1?{start:t,end:a[i+1]}:null).filter(Boolean)
+ const cuts=[0];for(let i=1;i<samples.length;i++){const a=samples[i-1],b=samples[i];if(!isPixelArray(a.pixels)||a.pixels.length!==b.pixels.length)throw Error('无效采样');let d=0;for(let j=0;j<a.pixels.length;j++)d+=Math.abs(a.pixels[j]-b.pixels[j]);const score=d/a.pixels.length/255;if(score>=threshold&&b.time-cuts.at(-1)>=.8&&duration-b.time>=.5)cuts.push(b.time);if(cuts.length>=20)break}return [...cuts,duration].map((t,i,a)=>i<a.length-1?{start:t,end:a[i+1]}:null).filter(Boolean)
 }
 export function copyAnalysis(text,duration){
  const clean=text.trim();if(!clean)return '未提供文案 / 字幕：无法判断原视频的开头钩子、论据或行动引导。请粘贴实际口播、字幕，或手动填写镜头文案后再生成。';
@@ -18,7 +19,7 @@ export function copyAnalysis(text,duration){
 }
 export function report({name,duration,width,height,shots,transcript,source='sampled'}){
  const avg=duration/shots.length;
- return `# 视频拉片报告\n\n参考视频：${name}\n规格：${width}×${height}，${duration.toFixed(1)} 秒\n${source==='timeline'?'工程镜头':'候选区间'}：${shots.length} 段，平均 ${avg.toFixed(1)} 秒/段\n\n## 证据与限制\n${source==='timeline'?'镜头来源为当前混剪工程，效果参数由工程记录提供；成片时间按总时长换算，仍需回放核对切口。没有进行音轨转录或剧情识别。':'本地抽帧 + 画面变化规则初分段；候选切点可能来自运镜、闪光或字幕变化，也可能漏掉短镜头。请先播放校正切点。未识别音轨、原工程、精确特效或拍摄参数。下面的排布与剪映参数是复现建议。'}\n\n## 怎么排：重剪建议\n建议顺序：最有信息量的结果 / 冲突 → 场景或问题 → 过程 / 证据 → 结果回扣 → 一个行动引导。根据实际内容选择，不能只按时间位置判断镜头作用。\n${avg>5?'候选区间偏长：检查是否包含多个信息点，可在动作或句意完整处再拆分。':'候选区间较短：检查观众是否来得及读完字幕，关键证据可适当多留时间。'}\n先找出最能说明主题的镜头放开头；中间用全景交代环境、近景证明细节；删除重复信息。\n\n## 文案分析\n${copyAnalysis(transcript,duration)}\n\n## 带时间点的文案检查\n${timedCopyReport(shots)}\n\n## 逐镜头拆解与剪映复现\n${shots.map((s,i)=>`### ${i+1}. ${s.start.toFixed(2)}–${s.end.toFixed(2)}s\n画面观察：${s.note||'尚未填写；请查看关键帧并播放核对'}\n该段文案：${s.copy||'未填写'}\n建议作用：${i===0?'开头：检查是否能快速说明主题':i===shots.length-1?'结尾：检查是否回扣主题并引导下一步':'中段：补充过程、细节或证据'}（位置建议，不是原片意图识别）\n选定复现方式：${s.effect}\n采样依据：${s.evidence||'复现方式为学习建议，尚未确认原片效果'}\n${recipes[s.effect]||recipes['硬切 / 节奏切换']}`).join('\n\n')}\n\n## 剪映操作说明\n不同版本和剪映 / CapCut 的菜单名称可能不同。关键帧、变速、转场是可尝试的复现路径，不能据此证明原片用了同一特效。\n参考：https://www.capcut.com/resource/how-to-use-capcut\nhttps://www.capcut.com/resource/how-to-add-keyframes-in-capcut\n`;
+ return `# 视频拉片报告\n\n参考视频：${name}\n规格：${width}×${height}，${duration.toFixed(1)} 秒\n${source==='timeline'?'工程镜头':'候选区间'}：${shots.length} 段，平均 ${avg.toFixed(1)} 秒/段\n\n## 证据与限制\n${source==='timeline'?'镜头来源为当前混剪工程，效果参数由工程记录提供；成片时间按总时长换算，仍需回放核对切口。没有进行音轨转录或剧情识别。':'本地抽帧 + 画面变化规则初分段；候选切点可能来自运镜、闪光或字幕变化，也可能漏掉短镜头。请先播放校正切点。本节未识别音轨、原工程、精确特效或拍摄参数；已运行的音轨分析另列。下面的排布与剪映参数是复现建议。'}\n\n## 怎么排：重剪建议\n建议顺序：最有信息量的结果 / 冲突 → 场景或问题 → 过程 / 证据 → 结果回扣 → 一个行动引导。根据实际内容选择，不能只按时间位置判断镜头作用。\n${avg>5?'候选区间偏长：检查是否包含多个信息点，可在动作或句意完整处再拆分。':'候选区间较短：检查观众是否来得及读完字幕，关键证据可适当多留时间。'}\n先找出最能说明主题的镜头放开头；中间用全景交代环境、近景证明细节；删除重复信息。\n\n## 文案分析\n${copyAnalysis(transcript,duration)}\n\n## 带时间点的文案检查\n${timedCopyReport(shots)}\n\n## 逐镜头拆解与剪映复现\n${shots.map((s,i)=>`### ${i+1}. ${s.start.toFixed(2)}–${s.end.toFixed(2)}s\n画面观察：${s.note||'尚未填写；请查看关键帧并播放核对'}\n该段文案：${s.copy||'未填写'}\n建议作用：${i===0?'开头：检查是否能快速说明主题':i===shots.length-1?'结尾：检查是否回扣主题并引导下一步':'中段：补充过程、细节或证据'}（位置建议，不是原片意图识别）\n选定复现方式：${s.effect}\n采样依据：${s.evidence||'复现方式为学习建议，尚未确认原片效果'}\n${recipes[s.effect]||recipes['硬切 / 节奏切换']}`).join('\n\n')}\n\n## 剪映操作说明\n不同版本和剪映 / CapCut 的菜单名称可能不同。关键帧、变速、转场是可尝试的复现路径，不能据此证明原片用了同一特效。\n参考：https://www.capcut.com/resource/how-to-use-capcut\nhttps://www.capcut.com/resource/how-to-add-keyframes-in-capcut\n`;
 }
 
 export function restoreNotes(data,reference){
