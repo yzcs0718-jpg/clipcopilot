@@ -1,6 +1,6 @@
-import {spatialLessons} from './spatial-lessons.js?v=20261027windows';
-import {detectVisualEffects} from './visual-effects.js?v=20261027windows';
-import {detectTemporalEffects} from './temporal-effects.js?v=20261027windows';
+import {spatialLessons} from './spatial-lessons.js?v=20261027review';
+import {detectVisualEffects} from './visual-effects.js?v=20261027review';
+import {detectTemporalEffects} from './temporal-effects.js?v=20261027review';
 export function buildEffectAudit(samples,shots,{text=null,audio=false,spatial=null}={}){const visual=shots.flatMap(s=>detectVisualEffects(samples,s)),temporal=detectTemporalEffects(samples),space=spatialLessons(spatial);return[
  {name:'转场',status:visual.some(e=>e.kind.startsWith('fade'))||temporal.some(e=>e.kind==='flash')?'有候选':'待确认',evidence:[...visual.filter(e=>e.kind.startsWith('fade')),...temporal.filter(e=>e.kind==='flash')],limit:'亮度线索不能区分所有叠化、遮挡、运镜和插件转场。'},
  {name:'变速 / 定格',status:temporal.some(e=>e.kind==='freeze')?'有候选':'待确认',evidence:temporal.filter(e=>e.kind==='freeze'),limit:'仅检查静止区间；没有原始素材帧率和运动基准，不能还原变速曲线。'},

@@ -1,4 +1,4 @@
-import {sourceLink} from './reference-style.js?v=20261027windows';
+import {sourceLink} from './reference-style.js?v=20261027review';
 export function validateCapture(d){
  if(!d||d.type!=='clippilot-capture'||d.version!==1)throw Error('不是支持的作品采集文件');
  const link=sourceLink(d.url);if(!link.url)throw Error('缺少作品链接');

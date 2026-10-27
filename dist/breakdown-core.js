@@ -1,5 +1,5 @@
-import {isPixelArray} from './reference-sampling.js?v=20261027windows';
-import {timedCopyReport} from './subtitles.js?v=20261027windows';
+import {isPixelArray} from './reference-sampling.js?v=20261027review';
+import {timedCopyReport} from './subtitles.js?v=20261027review';
 export const recipes={
  '硬切 / 节奏切换':'在剪映中导入素材 → 把播放头放到动作或句子结束处 → 分割 → 删除冗余区间 → 拖动片段首尾贴齐。先用直接切换检查节奏，避免每个切口都加转场。',
  '缓慢推近':'选中片段 → 在画面缩放参数旁添加起始关键帧（100%）→ 移到片段结尾，把缩放改为约 108% → 调整位置保持主体居中。100%→108% 仅为试做参数，按主体裁切情况调整。',

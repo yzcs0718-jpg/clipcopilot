@@ -1,5 +1,5 @@
-import{findRectangularWindows}from './window-shapes.js?v=20261027windows';
-import{maskStatistics,findCircleWindows,trackFeatures}from './spatial-core.js?v=20261027windows';
+import{findRectangularWindows}from './window-shapes.js?v=20261027review';
+import{maskStatistics,findCircleWindows,trackFeatures}from './spatial-core.js?v=20261027review';
 let segmenter,faceDetector,ort;const runtime='https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/';
 const modelURL='https://huggingface.co/onnx-community/mediapipe_selfie_segmentation/resolve/be49485c8e027524be38591817fc5cd31bd9d00e/onnx/model.onnx';
 const faceURL='https://cdn.jsdelivr.net/gh/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB@0f9ca4a9fc80170fd505168fd1132b837141f7df/models/onnx/version-RFB-320.onnx';

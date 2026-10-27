@@ -1,17 +1,17 @@
-import {claimMediaTask} from './media-task.js?v=20261027windows';
-import {applySuppliedCopy,sourceRatio,creativeExplanation} from './creation-guidance.js?v=20261027windows';
-import {remixReport} from './remix-core.js?v=20261027windows';
-import {createMP4Recorder,verifyMP4} from './mp4-export.js?v=20261027windows';
-import {prepareAssets,composeImport,appendBasicClips,importAction} from './asset-import.js?v=20261027windows';
-import {getPresetSkill,setActiveSkill} from './github-skills-state.js?v=20261027windows';
-import {applyRecipeCaptions,validateProvenance,validateSkill} from './github-skills-core.js?v=20261027windows';
-import {qualityPlan} from './quality-core.js?v=20261027windows';
-import {scanQuality} from './quality-scan.js?v=20261027windows';
-import {validateStyleProfile,attribution} from './reference-style.js?v=20261027windows';
-import {creativePlan,visualEffect} from './creative-core.js?v=20261027windows';
-import {captionLayout} from './coach-core.js?v=20261027windows';
-import {selection,showHealth,apiBase,requireModelCalls} from './provider-ui.js?v=20261027windows';
-import {validate,srt,scriptPlan,splitClip} from './core.js?v=20261027windows';
+import {claimMediaTask} from './media-task.js?v=20261027review';
+import {applySuppliedCopy,sourceRatio,creativeExplanation} from './creation-guidance.js?v=20261027review';
+import {remixReport} from './remix-core.js?v=20261027review';
+import {createMP4Recorder,verifyMP4} from './mp4-export.js?v=20261027review';
+import {prepareAssets,composeImport,appendBasicClips,importAction} from './asset-import.js?v=20261027review';
+import {getPresetSkill,setActiveSkill} from './github-skills-state.js?v=20261027review';
+import {applyRecipeCaptions,validateProvenance,validateSkill} from './github-skills-core.js?v=20261027review';
+import {qualityPlan} from './quality-core.js?v=20261027review';
+import {scanQuality} from './quality-scan.js?v=20261027review';
+import {validateStyleProfile,attribution} from './reference-style.js?v=20261027review';
+import {creativePlan,visualEffect} from './creative-core.js?v=20261027review';
+import {captionLayout} from './coach-core.js?v=20261027review';
+import {selection,showHealth,apiBase,requireModelCalls} from './provider-ui.js?v=20261027review';
+import {validate,srt,scriptPlan,splitClip} from './core.js?v=20261027review';
 const $=id=>document.getElementById(id);let assets=[],plan={clips:[]},busy=false,cancelled=false,previewEnd=null,previewCaption='';let history=[];let previousDraft=null;let previewing=false,previewRun=0,resultURL=null,previewVisual=null;let referenceStyle=null,qualityAbort=null,importBackup=null;const qualityCache=new Map();try{previousDraft=localStorage.getItem('clippilot-draft')}catch{}const status=t=>{$('status').textContent=t;$('import-status').textContent=t};
 function save(name,text,type){const u=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),30000)}
 function current(){return validate(plan,assets)}
@@ -118,7 +118,7 @@ document.addEventListener('reference-style',e=>{try{setReferenceStyle(e.detail);
 
 export async function localCreativeTask(run){
  if(busy)throw Error('请等待当前操作完成');if(!assets.length)throw Error('请先导入素材');const target=Number($('creative-seconds').value);if(!Number.isFinite(target)||target<3||target>60)throw Error('目标时长需为 3–60 秒');const release=claimMediaTask('运行本地视觉模型');busy=true;stopTimelinePreview();const states=new Map([...document.querySelectorAll('button,input,select,textarea')].map(e=>[e,e.disabled]));states.forEach((_,e)=>e.disabled=true);
- try{const {captureEvidence}=await import('./capture-frames.js?v=20261027windows');const frames=await captureEvidence(assets,(n,total)=>{$('creative-status').textContent=`准备本地视觉证据 ${n}/${total}…`});$('creative-status').textContent='本地视觉模型正在分析抽帧，可能需要数分钟；未调用云模型。';const result=await run({assets:assets.map(({name,duration})=>({name,duration})),frames,target,topic:$('creative-topic').value});validate(result,assets);if(result.skill)validateProvenance(result.skill);checkpoint();plan={clips:structuredClone(result.clips),skill:result.skill};draw();$('script-text').value=result.clips.map(c=>c.caption).join('\n');persist();document.querySelector('.timeline-panel').open=true;$('quality-results').replaceChildren();for(const c of result.clips){const row=document.createElement('p');row.textContent=`${assets[c.asset].name} ${c.start.toFixed(2)}–${c.end.toFixed(2)} 秒；引用 ${c.evidenceTime.toFixed(2)} 秒抽帧`;$('quality-results').append(row)}$('creative-status').textContent=`本地视觉方案已生成（${result.model}），请核对镜头与建议文案。`;return result;
+ try{const {captureEvidence}=await import('./capture-frames.js?v=20261027review');const frames=await captureEvidence(assets,(n,total)=>{$('creative-status').textContent=`准备本地视觉证据 ${n}/${total}…`});$('creative-status').textContent='本地视觉模型正在分析抽帧，可能需要数分钟；未调用云模型。';const result=await run({assets:assets.map(({name,duration})=>({name,duration})),frames,target,topic:$('creative-topic').value});validate(result,assets);if(result.skill)validateProvenance(result.skill);checkpoint();plan={clips:structuredClone(result.clips),skill:result.skill};draw();$('script-text').value=result.clips.map(c=>c.caption).join('\n');persist();document.querySelector('.timeline-panel').open=true;$('quality-results').replaceChildren();for(const c of result.clips){const row=document.createElement('p');row.textContent=`${assets[c.asset].name} ${c.start.toFixed(2)}–${c.end.toFixed(2)} 秒；引用 ${c.evidenceTime.toFixed(2)} 秒抽帧`;$('quality-results').append(row)}$('creative-status').textContent=`本地视觉方案已生成（${result.model}），请核对镜头与建议文案。`;return result;
  }finally{busy=false;states.forEach((disabled,e)=>e.disabled=disabled);release()}
 }
 

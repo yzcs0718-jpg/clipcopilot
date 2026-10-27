@@ -1,5 +1,5 @@
-import {claimMediaTask} from './media-task.js?v=20261027windows';
-import {createMP4Recorder,verifyMP4} from './mp4-export.js?v=20261027windows';
+import {claimMediaTask} from './media-task.js?v=20261027review';
+import {createMP4Recorder,verifyMP4} from './mp4-export.js?v=20261027review';
 const $=id=>document.getElementById(id);let running=false;
 function wait(el,event,timeout=12000){return new Promise((resolve,reject)=>{const cleanup=()=>{clearTimeout(timer);el.removeEventListener(event,ok);el.removeEventListener('error',bad)},ok=()=>{cleanup();resolve()},bad=()=>{cleanup();reject(Error('媒体无法解码'))};const timer=setTimeout(()=>{cleanup();reject(Error('检查超时'))},timeout);el.addEventListener(event,ok,{once:true});el.addEventListener('error',bad,{once:true})})}
 $('runtime-check').onclick=async()=>{if(running)return;let release;try{release=claimMediaTask('检查浏览器兼容性')}catch(e){$('runtime-output').textContent=e.message;return}running=true;$('runtime-check').disabled=true;const states=new Map([...document.querySelectorAll('button,input,select,textarea')].map(e=>[e,e.disabled]));states.forEach((_,e)=>e.disabled=true);const results=[];const row=(name,ok,detail)=>{results.push({name,ok,detail});$('runtime-output').textContent=results.map(r=>`${r.ok?'通过':'未通过'}｜${r.name}：${r.detail}`).join('\n')};let stream,rec,url,video,timer;

@@ -1,5 +1,5 @@
-import {validateCapture,validateCollection,upsertCapture} from './collection-core.js?v=20261027windows';
-import {validateStyleProfile,combineProfiles} from './reference-style.js?v=20261027windows';
+import {validateCapture,validateCollection,upsertCapture} from './collection-core.js?v=20261027review';
+import {validateStyleProfile,combineProfiles} from './reference-style.js?v=20261027review';
 const $=id=>document.getElementById(id),key='clippilot-collection-v1',styleKey='clippilot-styles-v1';let items=[],styles=[];
 const say=t=>$('collection-status').textContent=t;
 function download(data,name){const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000)}
