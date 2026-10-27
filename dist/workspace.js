@@ -6,6 +6,7 @@ $('open-ai-settings').onclick=()=>{history.replaceState(null,'','#edit');activat
 function jumpTo(mode,id){history.replaceState(null,'',`#${mode}`);activate(mode);const el=$(id);el.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});if(el.hasAttribute('tabindex'))el.focus({preventScroll:true})}
 $('nav-assets').onclick=()=>jumpTo('edit',$('asset-pool').hidden?'video-dropzone':'asset-pool');
 $('nav-results').onclick=()=>jumpTo('breakdown','ref-results');
+$('nav-howto').onclick=()=>jumpTo('breakdown','ref-howto');
 $('nav-teaching').onclick=()=>jumpTo('breakdown','reference-teaching');
 $('ref-view-results').onclick=()=>jumpTo('breakdown','ref-results');
 $('ref-results-teaching').onclick=()=>jumpTo('breakdown','reference-teaching');
