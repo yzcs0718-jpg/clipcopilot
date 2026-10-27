@@ -15,3 +15,5 @@ export async function runReferenceStages(stages,onUpdate=()=>{},shouldStop=()=>f
  }
  return{complete:results.every(r=>r.ok),cancelled:false,results};
 }
+
+export async function cachedCheck(force,complete,run,onReuse=()=>{}){if(!force&&complete){onReuse();return true}return await run()}
