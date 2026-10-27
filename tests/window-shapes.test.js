@@ -1,0 +1,13 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import{findRectangularWindows,groupRectangularWindows}from '../dist/window-shapes.js';
+import{spatialLessons}from '../dist/spatial-lessons.js';
+function frame({phase=0,texture=true,circle=false,touch=false,clutter=false,offset=0}={}){const width=160,height=100,pixels=new Uint8Array(width*height*3);for(let y=0;y<height;y++)for(let x=0;x<width;x++){const inside=circle?Math.hypot(x-80,y-50)<24:x>=(touch?0:40+offset)&&x<100+offset&&y>=25&&y<75;const c=inside?(texture&&((Math.floor(x/6)+phase)%2)?[220,90,50]:[60,215,175]):clutter&&x%8<4?[180,90,160]:[20,25,40];pixels.set(c,(y*width+x)*3)}return{time:phase*.5,width,height,pixels}}
+test('有纹理的完整矩形四边测量，拒绝纯色卡片、圆形、贴边和复杂背景',()=>{const boxes=findRectangularWindows(frame());assert.equal(boxes.length,1);assert.ok(Math.abs(boxes[0].w-.375)<.01);assert.ok(Math.abs(boxes[0].h-.5)<.01);for(const args of [{texture:false},{circle:true},{touch:true},{clutter:true}])assert.equal(findRectangularWindows(frame(args)).length,0)});
+const samples=(args=[])=>Array.from({length:6},(_,i)=>{const f=frame({phase:i,...args[i]});return{time:i*.5,rectangles:findRectangularWindows(f)}});
+test('单帧或静止纹理不升级为动态窗口，至少三帧及两次内容变化',()=>{assert.equal(groupRectangularWindows(samples().slice(0,2),.8).length,0);const fixed=findRectangularWindows(frame());assert.equal(groupRectangularWindows(Array.from({length:6},(_,i)=>({time:i*.5,rectangles:fixed})),.8).length,0);assert.equal(groupRectangularWindows(samples(),.8).length,1)});
+test('空白断开和长间隔不拼成一个窗口，移动窗口保留每帧位置',()=>{const s=samples();s[2].rectangles=[];assert.equal(groupRectangularWindows(s,.8)[0].start,1.5);assert.equal(groupRectangularWindows(s.map((f,i)=>({...f,time:i*3})),.8).length,0);const g=groupRectangularWindows(samples(Array.from({length:6},(_,i)=>({offset:i}))),.8);assert.ok(g[0].path.at(-1).x>g[0].path[0].x)});
+test('矩形建议带实测时间、尺寸和局限，并可生成逐项教学',()=>{const rectangles=groupRectangularWindows(samples(),.8),lessons=spatialLessons({rectangles,circles:[],frames:[],following:[]});assert.equal(lessons.mask.length,1);assert.match(lessons.mask[0].steps.join(' '),/矩形/);assert.match(lessons.mask[0].reason,/不能证明/);assert.match(lessons.mask[0].parameters,/38%/)});
+import{findCircleWindows}from '../dist/spatial-core.js';
+import{groupCircleWindows}from '../dist/window-shapes.js';
+test('矩形内高对比条纹不伪造圆形边界，圆形边缘方向验证保留真圆',()=>{assert.equal(findCircleWindows(frame()).length,0);assert.ok(findCircleWindows(frame({circle:true})).length>0)});
+test('同一采样帧的重复圆形不能凑成三帧证据',()=>{const c={x:.5,y:.5,r:.2,ry:.3,support:.9};assert.equal(groupCircleWindows([{time:0,circles:[c,c,c]}],.8).length,0);assert.equal(groupCircleWindows([0,.5,1].map(time=>({time,circles:[c]})),.8)[0].count,3)});
