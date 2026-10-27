@@ -27,5 +27,8 @@ export function effectHint(samples,shot){
 function readableSteps(steps){return steps.flatMap(value=>{const out=[];let chars=Array.from(value);while(chars.length>80){let cut=80;for(let i=79;i>=40;i--)if('，。；,; '.includes(chars[i])){cut=i+1;break}out.push(chars.slice(0,cut).join(''));chars=chars.slice(cut)}if(chars.length)out.push(chars.join(''));return out})}
 export function buildEvidenceLesson(items,samples){
  if(!items.length||!samples.length)throw Error('当前范围没有可用检测线索；请先分析画面文字或切换到“手动选择的学习方法”。未知效果不会生成虚构教学。');
- let cursor=0;return items.flatMap((item,index)=>{const pic=samples.reduce((a,b)=>Math.abs(b.time-item.start)<Math.abs(a.time-item.start)?b:a);const steps=readableSteps(item.steps);return steps.map((text,step)=>{const duration=Math.min(12,Math.max(4,Math.ceil(text.replace(/\s/g,'').length/7))),start=cursor;cursor+=duration;return{label:`线索 ${index+1}`,shot:index+1,range:`${item.start.toFixed(2)}–${item.end.toFixed(2)} 秒`,effect:item.title,text,step,stepCount:steps.length,parameter:item.parameters||'检测候选的试做步骤，需对照原片校正',check:item.reason,image:pic.image,start,duration}})});
+ let cursor=0;return items.flatMap((item,index)=>{
+  const steps=item.steps.flatMap(value=>{const match=/^\s*(\d+(?:\.\d+)?)\s*秒/.exec(value),candidate=match?Number(match[1]):NaN,sourceTime=Number.isFinite(candidate)&&candidate>=item.start&&candidate<=item.end?candidate:item.start;return readableSteps([value]).map(text=>({text,sourceTime}))});
+  return steps.map(({text,sourceTime},step)=>{const pic=samples.reduce((a,b)=>Math.abs(b.time-sourceTime)<Math.abs(a.time-sourceTime)?b:a),duration=Math.min(12,Math.max(4,Math.ceil(text.replace(/\s/g,'').length/7))),start=cursor;cursor+=duration;return{label:`线索 ${index+1}`,shot:index+1,range:`${item.start.toFixed(2)}–${item.end.toFixed(2)} 秒`,effect:item.title,text,step,stepCount:steps.length,parameter:item.parameters||'检测候选的试做步骤，需对照原片校正',check:item.reason,image:pic.image,frameTime:pic.time,sourceTime,start,duration}})
+ });
 }

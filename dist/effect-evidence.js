@@ -1,4 +1,4 @@
-import {isPixelArray} from './reference-sampling.js?v=20261027review';
+import {isPixelArray} from './reference-sampling.js?v=20261027motion';
 // Pixel measurements describe visible changes; they do not identify editing software.
 export function effectEvidence(samples,shot){
  const frames=samples.filter(f=>f.time>=shot.start&&f.time<shot.end&&isPixelArray(f.pixels)&&f.pixels.length).sort((a,b)=>a.time-b.time);

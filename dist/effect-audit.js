@@ -1,10 +1,10 @@
-import {spatialLessons} from './spatial-lessons.js?v=20261027review';
-import {detectVisualEffects} from './visual-effects.js?v=20261027review';
-import {detectTemporalEffects} from './temporal-effects.js?v=20261027review';
+import {spatialLessons} from './spatial-lessons.js?v=20261027motion';
+import {detectVisualEffects} from './visual-effects.js?v=20261027motion';
+import {detectTemporalEffects} from './temporal-effects.js?v=20261027motion';
 export function buildEffectAudit(samples,shots,{text=null,audio=false,spatial=null}={}){const visual=shots.flatMap(s=>detectVisualEffects(samples,s)),temporal=detectTemporalEffects(samples),space=spatialLessons(spatial);return[
  {name:'转场',status:visual.some(e=>e.kind.startsWith('fade'))||temporal.some(e=>e.kind==='flash')?'有候选':'待确认',evidence:[...visual.filter(e=>e.kind.startsWith('fade')),...temporal.filter(e=>e.kind==='flash')],limit:'亮度线索不能区分所有叠化、遮挡、运镜和插件转场。'},
  {name:'变速 / 定格',status:temporal.some(e=>e.kind==='freeze')?'有候选':'待确认',evidence:temporal.filter(e=>e.kind==='freeze'),limit:'仅检查静止区间；没有原始素材帧率和运动基准，不能还原变速曲线。'},
- {name:'字幕动画',status:text?text.tracks.length?'有文字证据':'已运行，待确认':'尚未运行',evidence:[],limit:text?`OCR ${text.frames.length} 帧，${text.tracks.length} 条文字候选；只能估计采样位置与尺寸变化，字体、花字、入出场动画未知。`:'点击“识别画面文字”检查文字内容与位置变化；不是语音识别。'},
+ {name:'字幕动画',status:text?text.tracks.length?'有文字证据':'已运行，待确认':'尚未运行',evidence:[],limit:text?`OCR ${text.frames.length} 帧，${text.tracks.length} 条文字候选；比较全程位置与尺寸变化，原字体、动画预设和精确入出点未知。${text.fullScan===false?'仅检查 '+text.coverage.map(r=>r.start.toFixed(2)+'–'+r.end.toFixed(2)+' 秒').join('；')+'，其余时间未知。':''}`:'点击“识别画面文字”检查文字内容与位置变化；不是语音识别。'},
  {name:'蒙版',status:space.mask.length?'有候选':spatial?'已检查，待确认':'待确认',evidence:space.mask,limit:'检查圆形纹理及近纯色周围的矩形动态窗口，输出几何试做参数；实景物体和画框也可能满足条件，尚不识别任意形状、旋转或所有蒙版。'},
  {name:'抠像',status:space.cutout.length?'已生成复现遮罩':spatial?'未提取可靠人物':'待确认',evidence:space.cutout,limit:'新计算人物前景遮罩供复现，不证明原片用了抠像；当前不处理任意商品、动物或精细头发。'},
  {name:'跟踪',status:space.tracking.length?'有候选':spatial?'已检查，待确认':'待确认',evidence:space.tracking,limit:'比较文字与非文字局部特征的运动关系，并排除近似整体平移；同动也可能由实景文字或手动关键帧造成。'},

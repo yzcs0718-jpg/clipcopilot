@@ -1,4 +1,4 @@
-import{spatialFrameMarks,textFrameMarks}from './frame-review-core.js?v=20261027review';
+import{spatialFrameMarks,textFrameMarks}from './frame-review-core.js?v=20261027motion';
 let dialog;
 export function frameOverlay(frame,marks,{large=false}={}){
  const wrapper=document.createElement('div');wrapper.className='review-frame'+(large?' review-frame-large':'');

@@ -1,4 +1,4 @@
-import {decodeCTC,textRegions} from './paddle-ocr-core.js?v=20261027review';
+import {decodeCTC,textRegions} from './paddle-ocr-core.js?v=20261027motion';
 let ort,detector,recognizer,characters;
 const runtime='https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/';
 const urls={det:'https://huggingface.co/PaddlePaddle/PP-OCRv5_mobile_det_onnx/resolve/e6f4fa85f00e168c862bc462aebca69eef9b3d3d/inference.onnx',rec:'https://huggingface.co/PaddlePaddle/PP-OCRv5_mobile_rec_onnx/resolve/ed152b8b495f84de93cda5709d768548a9127622/inference.onnx'};

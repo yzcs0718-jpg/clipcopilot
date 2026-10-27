@@ -1,4 +1,4 @@
-import {githubLocation,parseSkill} from './github-skills-core.js?v=20261027review';
+import {githubLocation,parseSkill} from './github-skills-core.js?v=20261027motion';
 async function githubJSON(path,fetcher){const r=await fetcher('https://api.github.com'+path,{headers:{Accept:'application/vnd.github+json'},signal:AbortSignal.timeout(20000)});if(!r.ok)throw Error(r.status===403||r.status===429?'GitHub 请求额度或访问权限受限，请稍后重试，或上传 SKILL.md':r.status===404?'找不到公开仓库、版本或文件；私有仓库请下载 SKILL.md 后上传':`GitHub 读取失败（${r.status}）`);const text=await r.text();if(text.length>3000000)throw Error('仓库响应过大，请粘贴具体 SKILL.md 文件链接');return JSON.parse(text)}
 const enc=encodeURIComponent,parts=s=>s.split('/').map(enc).join('/');
 export async function discoverGithubSkills(value,refOverride='',fetcher=fetch){

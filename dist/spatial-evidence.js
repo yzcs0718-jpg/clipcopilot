@@ -1,12 +1,12 @@
-import{reviewThumbnail}from './frame-review.js?v=20261027review';
-import{filterReviewFrames,pageReviewFrames}from './frame-review-core.js?v=20261027review';
-import{groupRectangularWindows,groupCircleWindows}from './window-shapes.js?v=20261027review';
-import {referenceAudioTask} from './breakdown.js?v=20261027review';
-import {followEvidence,trackingCoverage} from './spatial-core.js?v=20261027review';
+import{reviewThumbnail}from './frame-review.js?v=20261027motion';
+import{filterReviewFrames,pageReviewFrames}from './frame-review-core.js?v=20261027motion';
+import{groupRectangularWindows,groupCircleWindows}from './window-shapes.js?v=20261027motion';
+import {referenceAudioTask} from './breakdown.js?v=20261027motion';
+import {followEvidence,trackingCoverage} from './spatial-core.js?v=20261027motion';
 const $=id=>document.getElementById(id);let worker=null,pending=new Map(),seq=0,controller=null,textData=null,latest=null;
 const abort=()=>{controller?.abort();worker?.terminate();worker=null;for(const p of pending.values())p.reject(Error('空间分析已停止'));pending.clear()};
 function rpc(type,data={}){return new Promise((resolve,reject)=>{const id=++seq,timer=setTimeout(()=>{pending.delete(id);reject(Error('空间分析超时，请缩短视频后重试'))},120000);pending.set(id,{resolve:v=>{clearTimeout(timer);resolve(v)},reject:e=>{clearTimeout(timer);reject(e)}});worker.postMessage({id,type,...data})})}
-function startWorker(){worker=new Worker(new URL('./spatial-worker.js?v=20261027review',import.meta.url),{type:'module'});worker.onmessage=({data})=>{if(data.type==='progress'){$('spatial-status').textContent=data.text;return}const p=pending.get(data.id);pending.delete(data.id);if(!p)return;data.type==='error'?p.reject(Error(data.text)):p.resolve(data.result)};worker.onerror=()=>{for(const p of pending.values())p.reject(Error('空间分析引擎运行失败'));pending.clear()};}
+function startWorker(){worker=new Worker(new URL('./spatial-worker.js?v=20261027motion',import.meta.url),{type:'module'});worker.onmessage=({data})=>{if(data.type==='progress'){$('spatial-status').textContent=data.text;return}const p=pending.get(data.id);pending.delete(data.id);if(!p)return;data.type==='error'?p.reject(Error(data.text)):p.resolve(data.result)};worker.onerror=()=>{for(const p of pending.values())p.reject(Error('空间分析引擎运行失败'));pending.clear()};}
 
 function event(video,name,signal){return new Promise((resolve,reject)=>{const clean=()=>{clearTimeout(timer);video.removeEventListener(name,done);video.removeEventListener('error',fail);signal.removeEventListener('abort',cancel)},done=()=>{clean();resolve()},fail=()=>{clean();reject(Error('视频解码失败'))},cancel=()=>{clean();reject(Error('空间分析已停止'))},timer=setTimeout(()=>{clean();reject(Error('视频解码超时'))},15000);video.addEventListener(name,done,{once:true});video.addEventListener('error',fail,{once:true});signal.addEventListener('abort',cancel,{once:true});if(signal.aborted)cancel()})}
 function maskImage(mask,width=mask.width,height=mask.height){const canvas=document.createElement('canvas');canvas.width=mask.width;canvas.height=mask.height;const ctx=canvas.getContext('2d'),img=ctx.createImageData(mask.width,mask.height);for(let i=0;i<mask.pixels.length;i++){img.data[i*4]=img.data[i*4+1]=img.data[i*4+2]=mask.pixels[i];img.data[i*4+3]=255}ctx.putImageData(img,0,0);const output=document.createElement('canvas');output.width=width;output.height=height;output.getContext('2d').drawImage(canvas,0,0,width,height);return output.toDataURL('image/png')}

@@ -1,5 +1,5 @@
 // Structural remix only: no claims of semantic scene or highlight recognition.
-import {validate} from './core.js?v=20261027review';
+import {validate} from './core.js?v=20261027motion';
 export function remixClips(input,assets,{spread=false,mode='remix'}={}){
  if(!['remix','sequence'].includes(mode))throw Error('不支持的再创作方式');
  let clips=structuredClone(input);validate({clips},assets);

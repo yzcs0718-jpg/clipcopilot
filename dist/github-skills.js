@@ -1,7 +1,7 @@
-import {parseSkill,validateSkill} from './github-skills-core.js?v=20261027review';
-import {discoverGithubSkills,loadGithubSkill} from './github-skills-loader.js?v=20261027review';
-import {getActiveSkill,getSkillMode,setActiveSkill} from './github-skills-state.js?v=20261027review';
-import {applyEditingSkill} from './app.js?v=20261027review';
+import {parseSkill,validateSkill} from './github-skills-core.js?v=20261027motion';
+import {discoverGithubSkills,loadGithubSkill} from './github-skills-loader.js?v=20261027motion';
+import {getActiveSkill,getSkillMode,setActiveSkill} from './github-skills-state.js?v=20261027motion';
+import {applyEditingSkill} from './app.js?v=20261027motion';
 const $=id=>document.getElementById(id),storageKey='clippilot-github-skills-v1';let discovery=null,current=null,library=[],reading=false;
 const say=t=>$('github-skill-status').textContent=t;
 function download(text,name,type){const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000)}
