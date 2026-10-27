@@ -1,8 +1,8 @@
-import {claimMediaTask} from './media-task.js';
-import {createMP4Recorder,verifyMP4} from './mp4-export.js';
-import {buildLesson,buildEvidenceLesson,lessons,lessonSteps,lessonCheck} from './lesson-core.js';
-import {srt} from './core.js';
-import {wrapCaption} from './coach-core.js';
+import {claimMediaTask} from './media-task.js?v=20261027windows';
+import {createMP4Recorder,verifyMP4} from './mp4-export.js?v=20261027windows';
+import {buildLesson,buildEvidenceLesson,lessons,lessonSteps,lessonCheck} from './lesson-core.js?v=20261027windows';
+import {srt} from './core.js?v=20261027windows';
+import {wrapCaption} from './coach-core.js?v=20261027windows';
 const $=id=>document.getElementById(id);let focusedEvidence=null,evidenceItems=[],data={shots:[],samples:[]},cancelled=false,videoURL=null,subtitleURL=null,teaching=false;
 export function updateTeaching(shots,samples){if(JSON.stringify(shots)!==JSON.stringify(data.shots)){$('teach-result').hidden=true;$('teach-video').pause();$('teach-video').removeAttribute('src');if(videoURL){URL.revokeObjectURL(videoURL);videoURL=null}if(subtitleURL){URL.revokeObjectURL(subtitleURL);subtitleURL=null}}if(!shots.length){$('teach-result').hidden=true;$('teach-video').pause()}data={shots:structuredClone(shots),samples};const select=$('teach-shot'),old=select.value;select.replaceChildren();const all=document.createElement('option');all.value='all';all.textContent=`全部 ${shots.length} 个镜头`;select.append(all);shots.forEach((shot,i)=>{const op=document.createElement('option');op.value=i;op.textContent=`镜头 ${i+1} · ${shot.start.toFixed(1)}–${shot.end.toFixed(1)} 秒`;select.append(op)});select.value=[...select.options].some(o=>o.value===old)?old:'all';$('teach-status').textContent=shots.length?'默认按检测线索生成教学，也可切换手动学习；每步按文字长度留出阅读时间。无配音，动画是操作示意。':'先完成拉片抽帧。'}
 export function tutorialCard(shot){const recipe=lessons[shot.effect]||lessons['硬切 / 节奏切换'];const box=document.createElement('details');box.className='shot-lesson';box.open=true;const title=document.createElement('summary');title.textContent=`剪映实操 · ${shot.start.toFixed(2)}–${shot.end.toFixed(2)} 秒`;box.append(title);const list=document.createElement('ol');for(const text of lessonSteps(shot)){const li=document.createElement('li');li.textContent=text;list.append(li)}box.append(list);const p=document.createElement('p');p.textContent=recipe.parameter+'。'+lessonCheck(shot);box.append(p);return box}

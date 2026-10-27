@@ -1,4 +1,4 @@
-import {frameQuality} from './quality-core.js';
+import {frameQuality} from './quality-core.js?v=20261027windows';
 function event(el,type,signal){return new Promise((resolve,reject)=>{const cleanup=()=>{clearTimeout(timer);el.removeEventListener(type,ok);el.removeEventListener('error',fail);signal?.removeEventListener('abort',abort)};const ok=()=>{cleanup();resolve()},fail=()=>{cleanup();reject(Error('视频无法解码'))},abort=()=>{cleanup();reject(Error('已取消画面检查'))};const timer=setTimeout(()=>{cleanup();reject(Error('画面检查超时，请换用 MP4 或关闭画面优选'))},15000);el.addEventListener(type,ok,{once:true});el.addEventListener('error',fail,{once:true});signal?.addEventListener('abort',abort,{once:true});if(signal?.aborted)abort()})}
 export async function scanQuality(assets,{signal,onProgress=()=>{}}={}){
  const count=Math.max(2,Math.min(12,Math.floor(240/assets.length))),results=[];let done=0;

@@ -1,6 +1,6 @@
-import {remixClips,storyboardCopy} from './remix-core.js';
-import {creativePlan} from './creative-core.js';
-import {validate} from './core.js';
+import {remixClips,storyboardCopy} from './remix-core.js?v=20261027windows';
+import {creativePlan} from './creative-core.js?v=20261027windows';
+import {validate} from './core.js?v=20261027windows';
 export function frameQuality(rgba,width,height){
  if(!Number.isInteger(width)||!Number.isInteger(height)||width<2||height<2||rgba.length!==width*height*4)throw Error('采样像素格式无效');
  const luma=new Float64Array(width*height);let sum=0,square=0,clipped=0,edges=0;

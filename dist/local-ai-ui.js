@@ -1,6 +1,6 @@
-import {modelSkill} from './github-skills-state.js';
-import {localCreativeTask} from './app.js';
-import {localReferenceTask,effectReferenceTask} from './breakdown.js';
+import {modelSkill} from './github-skills-state.js?v=20261027windows';
+import {localCreativeTask} from './app.js?v=20261027windows';
+import {localReferenceTask,effectReferenceTask} from './breakdown.js?v=20261027windows';
 const $=id=>document.getElementById(id),token=document.querySelector('meta[name="clippilot-local-token"]')?.content;
 const isLocal=token&&['127.0.0.1','localhost'].includes(location.hostname)&&location.protocol==='http:';
 if(isLocal){$('local-ai-controls').hidden=false;$('local-ai-status').textContent='本地版已打开。先点击读取模型；如果没有模型，按说明安装本地视觉模型。不使用云模型。'}

@@ -1,4 +1,4 @@
-import {auditTimeline,templates,templateDraft} from './coach-core.js';
+import {auditTimeline,templates,templateDraft} from './coach-core.js?v=20261027windows';
 const $=id=>document.getElementById(id);let latest={clips:[],assets:[]};
 function audit(){
  const data=auditTimeline({clips:latest.clips},latest.assets,$('coach-goal').value);

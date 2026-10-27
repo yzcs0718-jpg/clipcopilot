@@ -1,6 +1,6 @@
-import {remixClips,storyboardCopy} from './remix-core.js';
-import {validateStyleProfile} from './reference-style.js';
-import {validate} from './core.js';
+import {remixClips,storyboardCopy} from './remix-core.js?v=20261027windows';
+import {validateStyleProfile} from './reference-style.js?v=20261027windows';
+import {validate} from './core.js?v=20261027windows';
 export const creativeStyles={punchy:{name:'节奏快剪',seconds:[1.8,1.2,2.4,1.5],effects:['push','none','push','none']},gentle:{name:'舒缓叙事',seconds:[3.8,4.5,3.2],effects:['fade','push','fade']},explain:{name:'清晰讲解',seconds:[3,4,3.5],effects:['none','push','none']}};
 export function creativePlan(assets,{style='punchy',topic='',kind='product',target=15,referenceStyle=null,mode='remix',deferRemix=false}={}){
  if(style==='reference')validateStyleProfile(referenceStyle);

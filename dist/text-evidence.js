@@ -1,7 +1,7 @@
-import {inspectTextStyle} from './text-style.js';
-import {createPaddleOCR} from './paddle-ocr.js';
-import {referenceAudioTask} from './breakdown.js';
-import {textSampleTimes,extractTextLines,buildTextTracks,textSteps,textEvidenceReport} from './text-evidence-core.js';
+import {inspectTextStyle} from './text-style.js?v=20261027windows';
+import {createPaddleOCR} from './paddle-ocr.js?v=20261027windows';
+import {referenceAudioTask} from './breakdown.js?v=20261027windows';
+import {textSampleTimes,extractTextLines,buildTextTracks,textSteps,textEvidenceReport} from './text-evidence-core.js?v=20261027windows';
 const $=id=>document.getElementById(id);let worker=null,controller=null,latest=null;
 function waitEvent(video,name,signal){return new Promise((resolve,reject)=>{const cleanup=()=>{clearTimeout(timer);video.removeEventListener(name,done);video.removeEventListener('error',fail);signal.removeEventListener('abort',abort)},done=()=>{cleanup();resolve()},fail=()=>{cleanup();reject(Error('视频画面无法解码'))},abort=()=>{cleanup();reject(Error('文字识别已停止'))},timer=setTimeout(()=>{cleanup();reject(Error('读取视频画面超时'))},15000);video.addEventListener(name,done,{once:true});video.addEventListener('error',fail,{once:true});signal.addEventListener('abort',abort,{once:true});if(signal.aborted)abort()})}
 function abortable(promise,signal){return new Promise((resolve,reject)=>{const clean=()=>{clearTimeout(timer);signal.removeEventListener('abort',abort)},abort=()=>{clean();reject(Error('文字识别已停止'))},timer=setTimeout(()=>{clean();reject(Error('文字识别等待超时，请检查网络或缩短视频'))},120000);signal.addEventListener('abort',abort,{once:true});Promise.resolve(promise).then(v=>{clean();resolve(v)},e=>{clean();reject(e)});if(signal.aborted)abort()})}
