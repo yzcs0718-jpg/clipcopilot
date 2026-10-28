@@ -1,3 +1,4 @@
+import {detectColorFlashes} from './color-flash.js?v=20261027motion';
 import {shortEffectTimes} from './reference-sampling.js?v=20261027motion';
 import {detectTemporalEffects} from './temporal-effects.js?v=20261027motion';
 import {detectDarkFlashes} from './dark-flash.js?v=20261027motion';
@@ -20,9 +21,9 @@ export function planShortInspections(samples,shots,duration){
  }return windows.sort((a,b)=>a.start-b.start);
 }
 export function refinedTemporalEffects(samples,windows=[]){
- let found=[...detectTemporalEffects(samples),...detectDarkFlashes(samples)];
+ let found=[...detectTemporalEffects(samples),...detectDarkFlashes(samples),...detectColorFlashes(samples)];
  for(const window of windows){if(!window?.samples?.length)continue;
-  const refined=[...detectTemporalEffects(window.samples),...detectDarkFlashes(window.samples)];
+  const refined=[...detectTemporalEffects(window.samples),...detectDarkFlashes(window.samples),...detectColorFlashes(window.samples)];
   found=found.filter(e=>!(e.start>=window.start&&e.end<=window.end));
   found.push(...refined.filter(e=>!found.some(old=>old.kind===e.kind&&Math.min(old.end,e.end)>Math.max(old.start,e.start))));
  }return found.sort((a,b)=>a.start-b.start);
