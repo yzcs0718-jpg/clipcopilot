@@ -1,4 +1,4 @@
-import {refinedTemporalEffects} from './adaptive-short.js?v=20261027motion';
+import {refinedTemporalEffects} from './adaptive-short.js?v=20261028long3';
 import {textSteps} from './text-evidence-core.js?v=20261027motion';
 import {spatialLessons} from './spatial-lessons.js?v=20261027motion';
 import {detectVisualEffects} from './visual-effects.js?v=20261027motion';
