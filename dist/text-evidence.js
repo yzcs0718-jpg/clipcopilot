@@ -2,7 +2,7 @@ import {analysisDeadline,modelBudget} from './analysis-deadline.js?v=20261027mot
 import{reviewThumbnail}from './frame-review.js?v=20261027motion';
 import {inspectTextStyle} from './text-style.js?v=20261027motion';
 import {createPaddleOCR} from './paddle-ocr.js?v=20261027motion';
-import {referenceAudioTask} from './breakdown.js?v=20261028effects2';
+import {referenceAudioTask} from './breakdown.js?v=20261028wipe';
 import {textSampleTimes,extractTextLines,buildTextTracks,textSteps,textEvidenceReport,denseTextSampleTimes,mergeTextEvidence,partialTextEvidence,resumeTextFrames} from './text-evidence-core.js?v=20261027motion';
 const $=id=>document.getElementById(id);let worker=null,controller=null,latest=null,latestReference=null,baseResume=null;
 function waitEvent(video,name,signal){return new Promise((resolve,reject)=>{const cleanup=()=>{clearTimeout(timer);video.removeEventListener(name,done);video.removeEventListener('error',fail);signal.removeEventListener('abort',abort)},done=()=>{cleanup();resolve()},fail=()=>{cleanup();reject(Error('视频画面无法解码'))},abort=()=>{cleanup();reject(Error('文字识别已停止'))},timer=setTimeout(()=>{cleanup();reject(Error('读取视频画面超时'))},15000);video.addEventListener(name,done,{once:true});video.addEventListener('error',fail,{once:true});signal.addEventListener('abort',abort,{once:true});if(signal.aborted)abort()})}

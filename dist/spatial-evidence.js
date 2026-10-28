@@ -2,7 +2,7 @@ import {analysisDeadline,modelBudget} from './analysis-deadline.js?v=20261027mot
 import{reviewThumbnail}from './frame-review.js?v=20261027motion';
 import{filterReviewFrames,pageReviewFrames}from './frame-review-core.js?v=20261027motion';
 import{groupRectangularWindows,groupCircleWindows}from './window-shapes.js?v=20261027motion';
-import {referenceAudioTask} from './breakdown.js?v=20261028effects2';
+import {referenceAudioTask} from './breakdown.js?v=20261028wipe';
 import {followEvidence,trackingCoverage} from './spatial-core.js?v=20261027motion';
 const $=id=>document.getElementById(id);let worker=null,pending=new Map(),seq=0,controller=null,textData=null,latest=null;
 const abort=()=>{controller?.abort();worker?.terminate();worker=null;for(const p of pending.values())p.reject(Error('空间分析已停止'));pending.clear()};
