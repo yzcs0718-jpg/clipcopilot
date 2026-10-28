@@ -1,5 +1,5 @@
 import {audioReport} from './browser-audio-core.js?v=20261027motion';
-import {referenceAudioTask} from './breakdown.js?v=20261027motion';
+import {referenceAudioTask} from './breakdown.js?v=20261028effects2';
 const $=id=>document.getElementById(id);let worker=null,pending=null,cancelled=false;
 function stop(){worker?.terminate();worker=null;pending?.reject(Error('音频分析已停止'));pending=null}
 $('browser-audio-stop').onclick=()=>{cancelled=true;stop()};
