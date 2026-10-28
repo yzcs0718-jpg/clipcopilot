@@ -30,7 +30,7 @@ async function load(file){
  try{
  say(`正在读取 ${file.name}… 最多等待 15 秒。`);$('ref-filename').textContent=file.name;
  if(!file.size)throw Error('文件为空，请重新选择');
- baseSignature='';shortEvidence=null;spatialEvidence=null;textEvidence=null;$('ref-pipeline').hidden=true;$('teach-source').value='evidence';updateTeachingEvidence([]);$('effect-audit-list').replaceChildren();renderHowTo($('ref-howto-list'),[],seekReference);audioAnalysisReport='';document.dispatchEvent(new Event('reference-changed'));referenceFile=null;stopInline();$('effect-output').replaceChildren();$('effect-download').disabled=true;$('effect-status').textContent='已更换视频，尚未运行视觉深析。';$('ref-shot-index').replaceChildren();knownTimeline=null;shotEnd=null;subtitleCues=[];$('ref-transcript').value='';reference=null;lastReport='';samples=[];shots=[];$('ref-shots').replaceChildren();updateTeaching(shots,samples);$('ref-output').textContent='正在读取参考视频…';$('ref-result-summary').textContent='正在读取参考片，完成后将在这里显示逐段镜头。';$('ref-view-results').disabled=true;$('ref-results-teaching').disabled=true;player.pause();
+ baseSignature='';shortEvidence=null;spatialEvidence=null;textEvidence=null;$('ref-pipeline').hidden=true;$('teach-source').value='evidence';updateTeachingEvidence([]);$('ref-results-retry').hidden=true;$('effect-audit-list').replaceChildren();renderHowTo($('ref-howto-list'),[],seekReference);audioAnalysisReport='';document.dispatchEvent(new Event('reference-changed'));referenceFile=null;stopInline();$('effect-output').replaceChildren();$('effect-download').disabled=true;$('effect-status').textContent='已更换视频，尚未运行视觉深析。';$('ref-shot-index').replaceChildren();knownTimeline=null;shotEnd=null;subtitleCues=[];$('ref-transcript').value='';reference=null;lastReport='';samples=[];shots=[];$('ref-shots').replaceChildren();updateTeaching(shots,samples);$('ref-output').textContent='正在读取参考视频…';$('ref-result-summary').textContent='正在读取参考片，完成后将在这里显示逐段镜头。';$('ref-view-results').disabled=true;$('ref-results-teaching').disabled=true;player.pause();
  if(refURL)URL.revokeObjectURL(refURL);refURL=URL.createObjectURL(file);
  const ready=event(player,'loadedmetadata');player.preload='auto';player.src=refURL;player.load();await ready;
  if(!Number.isFinite(player.duration)||player.duration<=0||player.duration>600)throw Error('请选择时长不超过 10 分钟的视频');
@@ -130,13 +130,13 @@ for(const id of ['ref-scan-stop','text-stop','spatial-stop'])$(id).addEventListe
 async function analyzeReference({force=false}={}){
  if(deepRunning||scanning||loading)return say('已有分析正在运行，请查看上方实时进度');
  if(!reference)return say('请先选择视频');
- deepRunning=true;pipelineStopped=false;showPipeline();
+ deepRunning=true;pipelineStopped=false;$('ref-results-retry').hidden=true;showPipeline();
  const controls=['analysis-budget','ref-file','ref-scan','ref-basic','ref-deep','ref-demo','ref-effects-demo','ref-short-demo','ref-spatial-demo','ref-late-demo','ref-rectangle-demo','ref-motion-demo','ref-short60-demo'];
  const states=controls.map(id=>[$(id),$(id).disabled]);states.forEach(([el])=>el.disabled=true);
  let active=-1,observer,clock,stageStart=0;const limit=$('analysis-budget').value==='extended'?300:45;
  try{
  const stages=[{title:stageNames[0],required:true,run:()=>scanReference(force),message:()=>$('ref-status').textContent},
- {title:stageNames[1],run:()=>cachedCheck(force,textEvidence?.fullScan,()=>$('text-start').onclick(),()=>{$('text-status').textContent='已复用本视频已完成的文字证据，无需重新运行 OCR。'}),message:()=>$('text-status').textContent},
+ {title:stageNames[1],run:()=>cachedCheck(force,textEvidence?.fullScan&&!textEvidence?.pendingResume,()=>$('text-start').onclick(),()=>{$('text-status').textContent='已复用本视频已完成的文字证据，无需重新运行 OCR。'}),message:()=>$('text-status').textContent},
  {title:stageNames[2],run:()=>cachedCheck(force,!!spatialEvidence,()=>$('spatial-start').onclick(),()=>{$('spatial-status').textContent='已复用本视频已完成的空间证据，无需重新运行模型。'}),message:()=>$('spatial-status').textContent}];
  observer=new MutationObserver(()=>{if(active<0||pipelineStopped)return;const text=stages[active].message(),elapsed=Math.floor((Date.now()-stageStart)/1000);setPipelineRow(active,'running',text);$('ref-pipeline-status').textContent=`正在检查 ${active+1}/3 · 已用 ${elapsed} 秒${active>0?' / 上限 '+limit+' 秒':''} · ${text}`;if(shots.length)$('ref-result-summary').textContent='已有分镜和做法可先查看。'+$('ref-pipeline-status').textContent});
  for(const id of ['ref-status','text-status','spatial-status'])observer.observe($(id),{childList:true,subtree:true,characterData:true});
@@ -146,12 +146,13 @@ async function analyzeReference({force=false}={}){
  const done=result.results.filter(r=>r.ok).length;
  for(let i=result.results.length;i<3;i++)setPipelineRow(i,'cancelled',result.cancelled?'用户停止，未运行此项。':'镜头分析失败，尚不能继续。');
  const message=result.cancelled?`分析已停止，已完成 ${done}/3 项。已完成的证据保留，可点击“重新完整分析”重试。`:result.complete?'三项检查已完成。下方直接查看时间点、实测证据和剪映试做步骤。':`已完成 ${done}/3 项。未完成的原因已列在上方，其余结果已保留；可单独重试失败步骤。`;
- $('ref-pipeline-status').textContent=message;say(message);
+ $('ref-pipeline-status').textContent=message;$('ref-results-retry').hidden=result.complete||!shots.length;say(message);
  if(reference&&shots.length){updateAudit();lastReport=localReport();$('ref-output').textContent=lastReport;$('ref-result-summary').textContent=message;$('ref-results').scrollIntoView({behavior:'smooth',block:'start'});$('ref-results').focus({preventScroll:true})}
  return result.complete;
  }catch(error){say('完整分析未完成：'+error.message);$('ref-pipeline-status').textContent='完整分析未完成：'+error.message;return false}
  finally{observer?.disconnect();clearInterval(clock);deepRunning=false;$('ref-pipeline-stop').hidden=true;$('ref-stage-skip').hidden=true;$('ref-stage-skip-results').hidden=true;states.forEach(([el,disabled])=>el.disabled=disabled)}
 }
+$('ref-results-retry').onclick=()=>analyzeReference();
 $('ref-scan').onclick=analyzeReference;$('ref-deep').onclick=()=>analyzeReference({force:true});
 $('ref-basic').onclick=()=>{if(deepRunning)return;return scanReference()};
 
