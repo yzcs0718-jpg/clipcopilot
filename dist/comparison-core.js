@@ -1,7 +1,7 @@
 export function comparisonState(item,time){
  const p=item?.preview;if(!p||!Number.isFinite(time)||!Number.isFinite(item.start)||!Number.isFinite(item.end)||item.end<item.start)return null;
  const progress=Math.max(0,Math.min(1,(time-item.start)/Math.max(.001,item.end-item.start)));
- if(p.kind==='flash')return{kind:p.kind,white:time>=p.peakStart-1e-6&&time<=p.peakEnd+1e-6+Math.min(.04,p.precision||.008)?1:0};
+ if(p.kind==='flash'||p.kind==='dark-flash')return{kind:p.kind,[p.kind==='flash'?'white':'black']:time>=p.peakStart-1e-6&&time<=p.peakEnd+1e-6+Math.min(.04,p.precision||.008)?1:0};
  if(p.kind==='fade-in'||p.kind==='fade-out')return{kind:p.kind,alpha:p.kind==='fade-in'?progress:1-progress};
  if(p.kind==='freeze')return{kind:p.kind};
  if(p.kind==='scale'&&Number.isFinite(p.to))return{kind:p.kind,scale:1+(p.to-1)*progress};

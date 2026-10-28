@@ -1,0 +1,9 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {detectDarkFlashes} from '../dist/dark-flash.js';import {buildEffectAudit} from '../dist/effect-audit.js';import {comparisonState} from '../dist/comparison-core.js';import {lessonFrames} from '../dist/lesson-frames.js';
+const f=(time,v)=>({time,pixels:new Uint8Array(64*36*3).fill(v),image:'data:frame'+time});
+test('黑闪需要前后恢复，有剪映步骤且进入转场教程',()=>{const samples=[f(0,140),f(.1,0),f(.2,140)],r=detectDarkFlashes(samples);assert.equal(r.length,1);assert.equal(r[0].kind,'dark-flash');assert.equal(r[0].steps.length,4);assert.equal(buildEffectAudit(samples,[{start:0,end:.2}])[0].evidence[0].kind,'dark-flash');assert.equal(comparisonState(r[0],.1).black,1);assert.equal(comparisonState(r[0],0).black,0)});
+test('黑底、开头结尾黑画面、长黑场和稀疏缺帧不算短黑闪',()=>{for(const samples of [[f(0,0),f(.1,0),f(.2,0)],[f(0,0),f(.1,140),f(.2,140)],[f(0,140),f(.1,140),f(.2,0)],[f(0,140),f(.4,0),f(.8,140)],[f(0,140),f(.1,140),f(.2,0),f(1,140),f(1.1,140)]])assert.equal(detectDarkFlashes(samples).length,0)});
+test('局部密采样能更新黑闪，教程图优先取真实峰值帧并显示实际时间',()=>{const base=[f(0,140),f(.5,140),f(1,140)],dense=[f(.4,140),f(.5,0),f(.6,140)];const r=buildEffectAudit(base,[{start:0,end:1}],{short:{start:.4,end:.6,samples:dense}})[0].evidence[0];assert.equal(r.kind,'dark-flash');const frames=lessonFrames(r,[...base,...dense]);assert.equal(frames[1].frame.time,.5);assert.equal(frames[1].frame.pixels[0],0);});
+test('参考帧不重复，缺图不伪造，越界只展示实际可用采样',()=>{assert.deepEqual(lessonFrames({start:0,end:1},[]),[]);const r=lessonFrames({start:0,end:1},[f(.25,80)]);assert.equal(r.length,1);assert.equal(r[0].frame.time,.25)});
+
+import {detectVisualEffects} from '../dist/visual-effects.js';
+test('连续黑帧后一次跳亮不重复误报淡入，渐变仍保留',()=>{assert.equal(detectVisualEffects([f(0,0),f(.04,0),f(.08,140),f(.12,140)],{start:0,end:.16}).length,0);assert.ok(detectVisualEffects([f(0,0),f(.1,40),f(.2,80),f(.3,140)],{start:0,end:.4}).some(e=>e.kind==='fade-in'))});
