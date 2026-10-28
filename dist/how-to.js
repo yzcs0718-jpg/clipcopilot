@@ -1,14 +1,16 @@
 import {lessonFrames} from './lesson-frames.js?v=20261027motion';
 import {canCompare} from './comparison-core.js?v=20261027motion';
+let targets=[];
+document.addEventListener('howto-focus',event=>{const item=event.detail,target=targets.find(t=>t.item.start===item.start&&t.item.end===item.end&&t.item.title===item.title);if(!target)return;target.card.open=true;target.card.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});target.summary.focus({preventScroll:true})});
 // Render only measured evidence. Manual learning recipes stay in their own section.
 export function renderHowTo(container,rows,onSeek,samples=[]){
- container.replaceChildren();
+ container.replaceChildren();targets=[];
  const entries=rows.flatMap(row=>row.evidence.map(item=>({...item,category:row.name}))).sort((a,b)=>a.start-b.start);
  const status=document.createElement('p');status.className='muted';status.textContent=entries.length?`找到 ${entries.length} 项可试做线索。先播放对应时间，再按步骤操作；参数是复现起点，需对照原片调整。`:'还没有可展示的效果线索。完整分析后，有证据的剪映做法会出现在这里；没有可靠证据时不编造操作参数。';container.append(status);
  const index=document.createElement('div');index.className='howto-index';index.setAttribute('aria-label','按效果定位剪映做法');container.append(index);
  entries.forEach((item,i)=>{
   const card=document.createElement('details');card.className='howto-card';card.open=i<3;
-  const summary=document.createElement('summary');summary.textContent=`${item.start.toFixed(2)}–${item.end.toFixed(2)} 秒 · ${item.title}`;card.append(summary);
+  const summary=document.createElement('summary');summary.textContent=`${item.start.toFixed(2)}–${item.end.toFixed(2)} 秒 · ${item.title}`;card.append(summary);targets.push({item,card,summary});
   const jump=document.createElement('button');jump.className='secondary';jump.textContent=`${i+1} · ${item.category} · ${item.start.toFixed(1)} 秒`;jump.onclick=()=>{card.open=true;card.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});summary.focus({preventScroll:true})};index.append(jump);
   const actions=document.createElement('div');actions.className='row';
   const play=document.createElement('button');play.className='secondary';play.textContent='看原片这一段';play.onclick=()=>onSeek(item.start);

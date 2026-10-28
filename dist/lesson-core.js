@@ -1,3 +1,4 @@
+import {detectVisualEffects} from './visual-effects.js?v=20261027motion';
 export const lessons={
  '硬切 / 节奏切换':{steps:['导入并定位：把参考镜头对应素材放到主轨，找到动作或句意结束的位置。','分割与取舍：在播放头处分割，删去重复或停顿的区间，把片段首尾贴齐。','核对节奏：连续播放切口，确认动作与句意完整；不需要为每个切口添加转场。'],parameter:'试做：先保持原速，动作结束处直接切换',check:'观察是否跳轴、动作是否突兀；这只是硬切示意。'},
  '缓慢推近':{steps:['添加起点：选中素材，把播放头放到镜头开始，在缩放或位置参数旁添加关键帧。','设置终点：移到镜头结尾，把缩放从 100% 调到约 108%，调整位置保持主体居中。','播放核对：查看主体是否被裁切、速度是否自然；按画面内容调整缩放幅度。'],parameter:'试做：缩放 100% → 108%，主体居中',check:'也可能是实拍推镜头，不能仅凭抽帧断定用了关键帧。'},
@@ -16,12 +17,13 @@ export function buildLesson(shots,samples,selected='all'){
  if(!chosen.length||chosen.length>100||!samples.length)throw Error('请先完成拉片抽帧，并选择有效镜头');
  let cursor=0;return chosen.flatMap(s=>{const recipe=lessons[s.effect]||lessons['硬切 / 节奏切换'];const pic=samples.reduce((a,b)=>Math.abs(b.time-(s.start+s.end)/2)<Math.abs(a.time-(s.start+s.end)/2)?b:a);return lessonSteps(s).map((text,step)=>{const duration=Math.min(12,Math.max(4,Math.ceil(text.replace(/\s/g,'').length/7))),start=cursor;cursor+=duration;return {shot:s.index+1,range:`${s.start.toFixed(2)}–${s.end.toFixed(2)} 秒`,effect:Object.hasOwn(lessons,s.effect)?s.effect:'硬切 / 节奏切换',text,step,parameter:recipe.parameter,check:lessonCheck(s),image:pic.image,start,duration}})});
 }
-// Only low-resolution brightness evidence; never identifies original project effects.
+// Use the same measured visual detector as the main audit, rather than a weaker brightness hint.
 export function effectHint(samples,shot){
- const frames=samples.filter(f=>f.time>=shot.start&&f.time<shot.end&&f.pixels?.length);if(frames.length<3)return {effect:'硬切 / 节奏切换',evidence:'采样不足，无法判断特效；先学习基础切分。'};
- const luminance=frames.map(f=>f.pixels.reduce((n,v)=>n+v,0)/f.pixels.length/255),delta=luminance.at(-1)-luminance[0];const monotonic=luminance.slice(1).every((v,i)=>(v-luminance[i])*Math.sign(delta)>=-.025);
- if(Math.abs(delta)>.22&&monotonic)return {effect:'叠化 / 淡入淡出',evidence:'采样亮度持续变化，可能是淡入淡出，也可能是曝光或场景光线变化。请播放核对。'};
- return {effect:'硬切 / 节奏切换',evidence:'未找到足够的可验证特效证据。可先看硬切教学，或手动选择你想学习的效果；不能据此排除运镜、变速或其他特效。'};
+ if(samples.filter(f=>f.time>=shot.start&&f.time<shot.end&&f.pixels?.length).length<3)return {effect:'硬切 / 节奏切换',evidence:'采样不足，无法判断效果；手动学习不作为检测结论。'};
+ const found=detectVisualEffects(samples,shot),fade=found.find(e=>e.kind.startsWith('fade')),scale=found.find(e=>e.kind==='scale'&&e.preview?.to>1);
+ if(fade)return {effect:'叠化 / 淡入淡出',evidence:fade.reason};
+ if(scale)return {effect:'缓慢推近',evidence:scale.reason};
+ return {effect:'硬切 / 节奏切换',evidence:'尚无可匹配的自动学习预设；这里的手动方法不代表识别到原片使用硬切。检测到的其他效果请看上方针对性步骤。'};
 }
 
 function readableSteps(steps){return steps.flatMap(value=>{const out=[];let chars=Array.from(value);while(chars.length>80){let cut=80;for(let i=79;i>=40;i--)if('，。；,; '.includes(chars[i])){cut=i+1;break}out.push(chars.slice(0,cut).join(''));chars=chars.slice(cut)}if(chars.length)out.push(chars.join(''));return out})}

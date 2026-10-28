@@ -1,0 +1,8 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {effectsForShot} from '../dist/shot-guidance.js';import {effectHint} from '../dist/lesson-core.js';import {buildEffectAudit} from '../dist/effect-audit.js';
+const item=(start,end,title='黑闪')=>({start,end,title,steps:['真实步骤']});
+test('按真实时间重叠关联镜头，跨切口效果两侧都能找到，邻接效果不串入',()=>{const rows=[{name:'转场',evidence:[item(.9,1.1),item(2,3,'下一段')]}];assert.equal(effectsForShot(rows,{start:0,end:1}).length,1);assert.equal(effectsForShot(rows,{start:1,end:2}).length,1);assert.equal(effectsForShot(rows,{start:2,end:3})[0].title,'下一段');assert.equal(effectsForShot(rows,{start:3,end:4}).length,0)});
+test('仅关联已有证据，排序去重，不为待确认类别填入模板步骤',()=>{const rows=[{name:'蒙版',evidence:[]},{name:'字幕',evidence:[item(3,4,'字幕'),item(1,2,'文字'),item(1,2,'文字')]}];const r=effectsForShot(rows,{start:0,end:5});assert.deepEqual(r.map(x=>x.start),[1,3]);assert.equal(r[0].category,'字幕');assert.deepEqual(effectsForShot(rows,{start:NaN,end:5}),[])});
+test('镜头学习提示与整片检测使用同一淡入规则，不把一次跳亮叫淡入',()=>{const f=(time,v)=>({time,pixels:new Uint8Array(64*36*3).fill(v)}),samples=[f(0,0),f(.04,0),f(.08,140),f(.12,140)],shot={start:0,end:.16};assert.equal(effectHint(samples,shot).effect,'硬切 / 节奏切换');assert.equal(buildEffectAudit(samples,[shot])[0].evidence.length,0);assert.match(effectHint(samples,shot).evidence,/不代表/)});
+
+import {report} from '../dist/breakdown-core.js';
+test('导出报告同样优先实测步骤，不插入默认硬切模板',()=>{const text=report({name:'test',duration:2,width:320,height:180,shots:[{start:0,end:2,effect:'硬切 / 节奏切换'}],transcript:'',effectRows:[{name:'转场',evidence:[{...item(.9,1.1),parameters:'两帧',reason:'实测'}]}]});assert.match(text,/真实步骤/);assert.doesNotMatch(text,/选定复现方式/);assert.doesNotMatch(text,/删去重复或停顿/)});
