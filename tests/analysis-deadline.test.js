@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import{modelBudget,analysisDeadline}from '../dist/analysis-deadline.js';
+test('默认45秒、较长检查5分钟，无效模式回到有界默认值',()=>{assert.equal(modelBudget('quick'),45000);assert.equal(modelBudget('extended'),300000);assert.equal(modelBudget('bad'),45000)});
+test('到达时限调用实际中止回调且标记过期，关闭后不再中止',async()=>{let aborts=0;const expired=analysisDeadline(5,()=>aborts++),completed=analysisDeadline(5,()=>aborts+=100);completed.close();await new Promise(r=>setTimeout(r,20));assert.equal(expired.expired,true);assert.equal(completed.expired,false);assert.equal(aborts,1);expired.close();assert.throws(()=>analysisDeadline(0,()=>{}))});

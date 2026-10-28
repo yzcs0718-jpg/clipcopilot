@@ -1,3 +1,4 @@
+import {analysisDeadline,modelBudget} from './analysis-deadline.js?v=20261027motion';
 import{reviewThumbnail}from './frame-review.js?v=20261027motion';
 import {inspectTextStyle} from './text-style.js?v=20261027motion';
 import {createPaddleOCR} from './paddle-ocr.js?v=20261027motion';
@@ -12,7 +13,7 @@ async function recognizeFrame(canvas,time,signal){const {data}=await abortable(w
 
 function display(data,selftest){const box=$('text-results');box.replaceChildren();const p=document.createElement('p');p.textContent=`${selftest?'模型自检示意图 · ':''}${data.frames.length} 帧，基础间隔约 ${data.step.toFixed(2)} 秒；${data.tracks.length} 条文字候选。${!selftest&&data.fullScan===false?'仅检查 '+data.coverage.map(r=>r.start.toFixed(2)+'–'+r.end.toFixed(2)+' 秒').join('；')+'，其余时间未知。':''}${data.denseRanges?.length?'加密识别 '+data.denseRanges.map(r=>r.start.toFixed(2)+'–'+r.end.toFixed(2)+' 秒').join('；')+'（约 6 帧/秒）。':''}不会自动写入字幕。`;box.append(p);for(const t of data.tracks){const card=document.createElement('details'),summary=document.createElement('summary');summary.textContent=`${t.start.toFixed(2)}–${t.end.toFixed(2)} 秒 · ${t.text}${t.positionPattern?' · '+t.positionPattern:''}${t.scalePattern?' · '+t.scalePattern:''}`;card.append(summary);if(!selftest){const seek=document.createElement('button');seek.className='secondary';seek.textContent='播放此处核对';seek.onclick=()=>document.dispatchEvent(new CustomEvent('reference-seek',{detail:t.start}));card.append(seek);const teach=document.createElement('button');teach.className='secondary';teach.textContent='生成这段字幕教学 MP4';teach.onclick=()=>document.dispatchEvent(new CustomEvent('teach-evidence-item',{detail:{start:t.start,end:t.end,title:'字幕几何变化试做：'+t.text,reason:'OCR 实测几何变化，不是原工程识别。',parameters:[t.positionPattern,t.scalePattern].filter(Boolean).join('；'),steps:textSteps(t)}}));card.append(teach)}const list=document.createElement('ol');textSteps(t).forEach(text=>{const li=document.createElement('li');li.textContent=text;list.append(li)});card.append(list);box.append(card)}if(!selftest){const details=document.createElement('details'),summary=document.createElement('summary');summary.textContent='核对实际 OCR 采样画面与原始文字（可能含误识别）';details.append(summary);const grid=document.createElement('div');grid.className='text-sample-grid';for(let i=0;i<data.frames.length;i++){const f=data.frames[i],figure=document.createElement('figure'),caption=document.createElement('figcaption');caption.textContent=`${f.time.toFixed(2)} 秒 · 原始识别：${f.rawText||'没有文字'}`;figure.append(reviewThumbnail(data.frames,i,{mode:'text'}),caption);grid.append(figure)}details.append(grid);box.append(details)}if(!data.tracks.length){const p=document.createElement('p');p.textContent='未获得可靠文字，不能认定没有字幕。';box.append(p)}}
 async function run(selftest=false,range=null){
- controller=new AbortController();const signal=controller.signal;
+ controller=new AbortController();const signal=controller.signal,budget=modelBudget($('analysis-budget').value),deadline=analysisDeadline(budget,()=>{controller?.abort();worker?.terminate()});
  try{
   $('text-stop').hidden=false;$('text-download').disabled=true;$('text-status').textContent='准备浏览器文字识别…';
   const data=await referenceAudioTask(async({file,reference,shots})=>{
@@ -33,8 +34,8 @@ async function run(selftest=false,range=null){
   },{example:selftest,stopId:'text-stop',taskName:range?'精查字幕动画':'识别画面文字'});
   latest=data;if(!selftest)latestReference=data;display(data,selftest);$('text-download').disabled=false;if(!selftest)document.dispatchEvent(new CustomEvent('text-evidence-result',{detail:data}));
   $('text-status').textContent=selftest&&!data.tracks.some(t=>t.text.replace(/\s/g,'').includes('剪辑节奏'))?'自检未完整通过：中文或英文仍需核对。':`${range?'字幕动画精查':'文字识别'}完成：${data.tracks.length} 条候选。已比较全程位置与宽度，可展开核对转折节点；原动画预设和曲线仍未知。`;return true;
- }catch(e){controller?.abort();$('text-download').disabled=!latest;$('text-status').textContent='文字识别未完成：'+e.message;return false}
- finally{await worker?.terminate().catch(()=>{});worker=null;controller=null;$('text-stop').hidden=true}
+ }catch(e){controller?.abort();$('text-download').disabled=!latest;$('text-status').textContent=deadline.expired?`文字识别达到 ${budget/1000} 秒时限，未提交不完整结果。其余检查继续；可选较长时限后重试。`:'文字识别未完成：'+e.message;return false}
+ finally{deadline.close();await worker?.terminate().catch(()=>{});worker=null;controller=null;$('text-stop').hidden=true}
 }
 $('text-focus').onclick=()=>run(false,{start:Number($('text-focus-start').value),end:Number($('text-focus-end').value)});$('text-start').onclick=()=>run();$('text-selftest').onclick=()=>run(true);$('text-stop').onclick=()=>{controller?.abort();worker?.terminate();worker=null;$('text-status').textContent='正在停止文字识别…'};
 $('text-download').onclick=()=>{if(!latest)return;const url=URL.createObjectURL(new Blob([JSON.stringify(latest,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='ClipPilot-画面文字证据.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000)};
