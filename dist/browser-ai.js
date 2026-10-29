@@ -1,5 +1,5 @@
 import {claimMediaTask} from './media-task.js?v=20261027motion';
-import {effectReferenceTask} from './breakdown.js?v=20261028mask2';
+import {effectReferenceTask} from './breakdown.js?v=20261029motion3';
 import {browserResult} from './browser-ai-core.js?v=20261027motion';
 const $=id=>document.getElementById(id);let worker=null,pending=null,ready=false,controller=null;
 function reset(reason='浏览器模型已停止'){worker?.terminate();worker=null;ready=false;pending?.reject(Error(reason));pending=null}

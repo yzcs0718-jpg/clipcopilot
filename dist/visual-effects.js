@@ -1,3 +1,5 @@
+import {detectShakeEffects} from './shake-effects.js?v=20261029motion3';
+import {detectColorChanges} from './color-change-effects.js?v=20261029motion3';
 import {detectRotationEffects} from './rotation-effects.js?v=20261028effects2';
 import {detectPanEffects} from './pan-effects.js?v=20261027motion';
 const mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
@@ -14,6 +16,8 @@ export function detectVisualEffects(samples,shot){
  if(f[0].brightness<.035){let end=1;while(end<f.length-1&&f[end+1].time-f[0].time<=2&&f[end+1].brightness-f[end].brightness>.012)end++;const range=f.slice(0,end+1);if(range.length>=3&&range.slice(1).filter((s,i)=>s.brightness-range[i].brightness>.012).length>=2&&range.at(-1).brightness>.12&&range.slice(1).every((s,i)=>s.brightness>=range[i].brightness-.015))addFade('fade-in',range)}
  if(f.at(-1).brightness<.035){let start=f.length-2;while(start>0&&f.at(-1).time-f[start-1].time<=2&&f[start-1].brightness-f[start].brightness>.012)start--;const range=f.slice(start);if(range.length>=3&&range.slice(1).filter((s,i)=>range[i].brightness-s.brightness>.012).length>=2&&range[0].brightness>.12&&range.slice(1).every((s,i)=>s.brightness<=range[i].brightness+.015))addFade('fade-out',range)}
  const usable=f.filter(s=>s.brightness>.12&&s.brightness<.88&&s.contrast>.06);if(usable.length>=5){const a=usable[0],b=usable[Math.floor(usable.length/2)],c=usable.at(-1),w=a.pixelWidth,h=a.pixelHeight;if(w&&h&&c.time-a.time>=.6){const fit=estimateScale(a.a,c.a,w,h),middle=estimateScale(a.a,b.a,w,h);if(fit&&middle&&Math.abs(fit.scale-1)>=.03&&fit.improvement>.18&&fit.error<.28&&(fit.scale-1)*(middle.scale-1)>0&&Math.abs(middle.scale-1)<=Math.abs(fit.scale-1)+.01){const endScale=Math.round(fit.scale*100);effects.push({kind:'scale',preview:{kind:'scale',to:fit.scale},start:a.time,end:c.time,title:fit.scale>1?'放大 / 推近候选':'缩小 / 拉远候选',reason:`对齐首、中、末采样后，整体缩放匹配比仅平移匹配的误差降低 ${(fit.improvement*100).toFixed(0)}%。可能为后期缩放、实拍运镜或主体移动，不能确定原实现。`,parameters:`以 ${a.time.toFixed(2)} 秒画面为 100%，至 ${c.time.toFixed(2)} 秒约 ${endScale}%（图像匹配估计，不是原工程参数）`,steps:[`选中片段，在 ${a.time.toFixed(2)} 秒为缩放和位置添加关键帧。`,`在 ${c.time.toFixed(2)} 秒尝试缩放 ${endScale}%，调位置使画面中的固定背景对齐。`,`回放对比中间画面；若出现明显视差或主体独立移动，关键帧缩放只能近似，原片可能使用实拍运镜。`]})}}}
+ effects.push(...detectColorChanges(samples,shot));
+ const shake=detectShakeEffects(samples,shot);if(shake.length)return [...effects.filter(e=>e.kind!=='scale'),...shake].sort((a,b)=>a.start-b.start);
  const rotation=detectRotationEffects(samples,shot);if(rotation.length)return [...effects.filter(e=>e.kind!=='scale'),...rotation].sort((a,b)=>a.start-b.start);
  const pan=detectPanEffects(samples,shot);return [...effects.filter(e=>!pan.length||e.kind!=='scale'),...pan].sort((a,b)=>a.start-b.start);
 }
