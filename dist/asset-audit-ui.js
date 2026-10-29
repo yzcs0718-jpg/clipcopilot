@@ -1,0 +1,6 @@
+export function renderAssetAudit(container,audit,assets,onPreview){
+ container.replaceChildren();const summary=document.createElement('p');summary.textContent=`${audit.count}条素材 · 总时长 ${audit.seconds.toFixed(1)} 秒 · ${audit.duplicates.length}组重复线索 · ${audit.issues.length}项检查建议`;container.append(summary);
+ const limits=document.createElement('p');limits.className='muted';limits.textContent=audit.checksPending?'正在检查文件内容，已先显示画幅、分辨率和时间线建议。':'小文件完整比对，较大文件只抽样提示疑似重复；不分析声音或剧情，不自动删除素材。';container.append(limits);
+ if(!audit.issues.length){const p=document.createElement('p');p.textContent='本轮未发现这些规则覆盖的问题。仍需预览成片，确认内容和声音。';container.append(p)}
+ for(const issue of audit.issues){const item=document.createElement('article');item.className='asset-audit-item';const p=document.createElement('p');p.textContent=issue.message;item.append(p);const links=document.createElement('div');links.className='row';for(const i of issue.indices.slice(0,8)){const button=document.createElement('button');button.className='secondary';button.textContent=`预览 ${i+1} · ${assets[i]?.name||'素材'}`;button.onclick=()=>onPreview(i);links.append(button)}if(issue.indices.length>8){const more=document.createElement('span');more.textContent=`另有${issue.indices.length-8}条，完整列表见下载清单。`;links.append(more)}item.append(links);container.append(item)}
+}

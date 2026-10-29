@@ -1,5 +1,5 @@
 import {modelSkill} from './github-skills-state.js?v=20261027motion';
-import {localCreativeTask} from './app.js?v=20261027motion';
+import {localCreativeTask} from './app.js?v=20261029audit4';
 import {localReferenceTask,effectReferenceTask} from './breakdown.js?v=20261029motion3';
 const $=id=>document.getElementById(id),token=document.querySelector('meta[name="clippilot-local-token"]')?.content;
 const isLocal=token&&['127.0.0.1','localhost'].includes(location.hostname)&&location.protocol==='http:';
