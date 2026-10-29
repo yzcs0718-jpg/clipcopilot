@@ -17,3 +17,9 @@ export async function runReferenceStages(stages,onUpdate=()=>{},shouldStop=()=>f
 }
 
 export async function cachedCheck(force,complete,run,onReuse=()=>{}){if(!force&&complete){onReuse();return true}return await run()}
+
+export function referenceCompletion(result,shortComplete=true){
+ const done=result.results.filter(r=>r.ok).length,complete=result.complete&&shortComplete;
+ const message=result.cancelled?`分析已停止，已完成 ${done}/3 项。已完成的证据保留，可点击“开始 / 继续拉片”重试。`:result.complete&&!shortComplete?'三项基础检查已运行，但短效果补查仅部分完成。已有步骤可查看；点击“开始 / 继续拉片”补查剩余区间。':complete?'三项检查已完成。下方直接查看时间点、实测证据和剪映试做步骤。':`已完成 ${done}/3 项。未完成的原因已列在上方，其余结果已保留；可单独重试失败步骤。`;
+ return{complete,message};
+}

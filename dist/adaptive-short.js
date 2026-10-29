@@ -33,3 +33,7 @@ export function refinedTemporalEffects(samples,windows=[]){
   found.push(...refined.filter(e=>!found.some(old=>old.kind===e.kind&&Math.min(old.end,e.end)>Math.max(old.start,e.start))));
  }return found.sort((a,b)=>a.start-b.start);
 }
+
+export function remainingShortInspections(plan,completed=[]){
+ return plan.filter(p=>!completed.some(w=>Math.abs(w.start-p.start)<1e-6&&Math.abs(w.end-p.end)<1e-6&&w.samples?.length===p.times.length&&w.samples.every((f,i)=>Number.isFinite(f.time)&&Math.abs(f.time-p.times[i])<1e-6)));
+}

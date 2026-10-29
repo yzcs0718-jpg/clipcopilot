@@ -1,10 +1,11 @@
+import {detectMaskTransitions} from './mask-transition-effects.js?v=20261028mask2';
 import {detectWipes} from './wipe-effects.js?v=20261028wipe';
 import {detectDissolves} from './dissolve-effects.js?v=20261028effects2';
-import {refinedTemporalEffects} from './adaptive-short.js?v=20261028long3';
+import {refinedTemporalEffects} from './adaptive-short.js?v=20261028mask2';
 import {textSteps} from './text-evidence-core.js?v=20261027motion';
 import {spatialLessons} from './spatial-lessons.js?v=20261027motion';
 import {detectVisualEffects} from './visual-effects.js?v=20261028effects2';
-export function buildEffectAudit(samples,shots,{text=null,audio=false,spatial=null,short=null,focused=[]}={}){const visual=shots.flatMap(s=>detectVisualEffects(samples,s)),dissolves=[...detectDissolves(samples),...detectWipes(samples)],temporal=refinedTemporalEffects(samples,[...focused,...(short?[short]:[])]),space=spatialLessons(spatial);return[
+export function buildEffectAudit(samples,shots,{text=null,audio=false,spatial=null,short=null,focused=[]}={}){const visual=shots.flatMap(s=>detectVisualEffects(samples,s)),dissolves=[...detectDissolves(samples),...detectWipes(samples),...detectMaskTransitions(samples)],temporal=refinedTemporalEffects(samples,[...focused,...(short?[short]:[])]),space=spatialLessons(spatial);return[
  {name:'转场',status:dissolves.length||visual.some(e=>e.kind.startsWith('fade'))||temporal.some(e=>['flash','dark-flash','color-flash'].includes(e.kind))?'有候选':'待确认',evidence:[...dissolves,...visual.filter(e=>e.kind.startsWith('fade')),...temporal.filter(e=>['flash','dark-flash','color-flash'].includes(e.kind))],limit:'叠化和直线擦除仅检查前后画面近似稳定的双图过渡，亮度线索不能区分所有遮挡、运镜和插件转场。'},
  {name:'变速 / 定格',status:temporal.some(e=>e.kind==='freeze')?'有候选':'待确认',evidence:temporal.filter(e=>e.kind==='freeze'),limit:'仅检查静止区间；没有原始素材帧率和运动基准，不能还原变速曲线。'},
  {name:'字幕动画',status:text?text.pendingResume?'保留上次结果，本次待继续':text.partial?'部分完成，有待续查':text.tracks.length?'有文字证据':'已运行，待确认':'尚未运行',evidence:(text?.tracks||[]).map(t=>({start:t.start,end:t.end,title:'文字试做：'+t.text,preview:{kind:'text',text:t.text,keyframes:t.keyframes},reason:'OCR 实测文字与几何变化；招牌、水印和运镜也可能产生轨迹。',parameters:[t.positionPattern,t.scalePattern].filter(Boolean).join('；')||'已读取文字；尚未得到可靠动画轨迹',steps:textSteps(t)})),limit:text?`${text.partial?'本次基础文字检查仅完成 '+text.completedFrames+'/'+text.plannedFrames+' 个计划采样点；未完成时间未知。':''}OCR ${text.frames.length} 帧，${text.tracks.length} 条文字候选；比较全程位置与尺寸变化，原字体、动画预设和精确入出点未知。${!text.partial&&text.fullScan===false?'仅检查 '+text.coverage.map(r=>r.start.toFixed(2)+'–'+r.end.toFixed(2)+' 秒').join('；')+'，其余时间未知。':''}`:'点击“识别画面文字”检查文字内容与位置变化；不是语音识别。'},

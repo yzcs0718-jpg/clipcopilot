@@ -1,5 +1,5 @@
 import {lessonFrames} from './lesson-frames.js?v=20261027motion';
-import {canCompare} from './comparison-core.js?v=20261028wipe';
+import {canCompare} from './comparison-core.js?v=20261028mask2';
 let targets=[];
 document.addEventListener('howto-focus',event=>{const item=event.detail,target=targets.find(t=>t.item.start===item.start&&t.item.end===item.end&&t.item.title===item.title);if(!target)return;target.card.open=true;target.card.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});target.summary.focus({preventScroll:true})});
 // Render only measured evidence. Manual learning recipes stay in their own section.
